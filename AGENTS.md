@@ -8,6 +8,8 @@
 
 ## Lua conventions
 
+- Keep the README focused on current behaviour. Put upstream version comparisons and release-specific notes in work summaries, not the README.
+
 - Target the Forever client and Lua 5.1. Each addon file receives the shared private namespace with `local _, ns = ...`. Keep helpers and mutable state `local`; put only cross-file interfaces on `ns`. Keep `FlareUI_RP.toc` in dependency order.
 - Prefer clear event-driven code over polling. Keep FlareUI-specific hooks in the rendering adapters and TRP3 identity/profile lookups in `Profile.lua`. Preserve the existing saved setting keys when changing labels.
 - Unit tokens, especially nameplate tokens, can be reused. Check that identity values are accessible before branching on them or doing profile lookups. Pass secret health/colour results directly to widgets; don't compare or cache them as ordinary numbers.

@@ -12,6 +12,8 @@ FlareUI RP displays Total RP 3 names and colours on FlareUI’s player and targe
 
 **Nameplates:** Toggle RP names and colours separately. On full plates, the RP colour goes on the health fill and FlareUI controls the text colour. In **Name Only** mode, the colour goes on the text instead. NPCs keep their normal display.
 
+**Names Above Plate** uses its own first/full-name setting, even when no name is shown inside the bar.
+
 ## Development
 
 Run `./tools/check` with LuaJIT installed to check the addon manifest, compile the shipped Lua, and run the tests. GitHub Actions runs the same checks on pull requests and pushes to `main`. See [AGENTS.md](AGENTS.md) for coding conventions and how to verify upstream releases.

@@ -12,9 +12,16 @@ local function Paint(p)
     if not Live(p) then return end
     seen[p] = true
     local textColour = colours and p.nameOnly
-    if not (names or textColour) or not p.nameSlot then return end
+    -- 7.0.4 can show a separate name even when no bar text slot contains one.
+    local above = names and p.aboveKind and p.aboveName and p.aboveName:IsShown()
+    if not above and not (p.nameSlot and (names or textColour)) then return end
     local profile = ns.Profile(p.unit)
     if not profile then return end
+    if above then
+        local name = ns.ProfileName(profile, p.aboveKind == "fullname")
+        if name then p.aboveName:SetText(name) end
+    end
+    if not p.nameSlot then return end
     local name = names and ns.ProfileName(profile, p.nameFull)
     local color = textColour and profile:GetCustomColorForDisplay()
     if name then
