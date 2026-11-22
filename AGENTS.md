@@ -1,5 +1,15 @@
 # Working on FlareUI RP
 
+## Design principle: substitute RP identity, preserve FlareUI’s choices
+
+For each feature, ask: **What would stock FlareUI show for this unit, in this layout and state?**
+
+- **Names:** Where FlareUI shows a player’s game name, substitute the available RP name in the selected first/full-name format. Keep the label’s placement, visibility and level prefix. A hidden name stays hidden.
+- **Colours:** Where FlareUI would use a class colour, substitute the available RP colour. Determine this from the setting and unit state, not by comparing RGB values. A green bar with Class Colours off stays green; a health warning, reaction colour, or party/raid name colour keeps its meaning.
+- **Fallbacks:** Treat name and colour independently. A profile with only a name changes only the name. When data is unavailable, restricted, or an option is switched off, leave or restore the normal FlareUI display.
+
+When adding a new display surface, test both a case where substitution is expected and one where FlareUI’s choice must win.
+
 ## Verify upstream behaviour against releases
 
 - For every implementation or bug fix, check the latest **public, stable release for WoW: Forever** of **both** [FlareUI](https://github.com/malkkav/FlareUI/releases) and [Total RP 3](https://github.com/Total-RP/Total-RP-3/releases). Do not assume `main`, the newest tag, or the neighbouring working copy is what players have installed.
@@ -13,7 +23,6 @@
 - Target the Forever client and Lua 5.1. Each addon file receives the shared private namespace with `local _, ns = ...`. Keep helpers and mutable state `local`; put only cross-file interfaces on `ns`. Keep `FlareUI_RP.toc` in dependency order.
 - Prefer clear event-driven code over polling. Keep FlareUI-specific hooks in the rendering adapters and TRP3 identity/profile lookups in `Profile.lua`. Preserve the existing saved setting keys when changing labels.
 - Unit tokens, especially nameplate tokens, can be reused. Check that identity values are accessible before branching on them or doing profile lookups. Pass secret health/colour results directly to widgets; don't compare or cache them as ordinary numbers.
-- Keep each fallback independent: a missing RP name must not suppress an available colour, and vice versa. Let FlareUI own layout, visibility and warning colours.
 - Optimise work in frequently called hooks before introducing caches. Prefer reusing data within a single paint to retaining profiles across target swaps and profile changes.
 
 ## Verification

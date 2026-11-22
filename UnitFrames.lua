@@ -84,9 +84,9 @@ local function StartUnitFrames(config, elements)
         HealthSetting(playerKey, "player", "FlareUI_UF_Player")
         HealthSetting(healthKey, "target", "FlareUI_UF_Target")
         elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = healthKey, title = "RP Target Health Colour",
-            help = "Use the target player's profile colour while preserving FlareUI's health tints." }
+            help = "Enable Class Colours on the FlareUI target frame to replace a player's class colour with their RP colour. Health tints still take priority." }
         elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = playerKey, title = "RP Player Health Colour",
-            help = "Use your profile colour on your own health bar while preserving FlareUI's health tints." }
+            help = "Enable Class Colours on the FlareUI player frame to replace your class colour with your RP colour. Health tints still take priority." }
     end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
         TRP3_API.RegisterCallback(TRP3_Addon, event, Refresh)

@@ -25,7 +25,7 @@ local uf = { FillSlots = function() end, HealthColorMode = function(d) return d.
     HealthTint = { RED = { 1, 0, 0 }, AT = 0.3, CurveRGB = function(_, curve)
         return unpack(curve[low and 0 or 0.3])
     end } }
-FlareUI = { UnitFrames = uf, EditPreviewing = function() return false end, ClassColorsOn = function() return true end,
+FlareUI = { UnitFrames = uf, EditPreviewing = function() return false end, ClassColorsOn = function(settings) return settings.classColor ~= false end,
     db = { profile = { unitframes = { units = { target = db } } } } }
 function hooksecurefunc(obj, method, fn) assert(obj == uf and method == "FillSlots"); tick = fn end
 assert(loadfile("UnitHealth.lua"))("FlareUI_RP", ns)
@@ -34,6 +34,9 @@ ns.healthEnabled.target = true
 ns.ReadHealthColor("target")
 local function check(expected) tick(frame, "health"); assert(bar.color[1] == expected) end
 check(0.2)
+db.classColor = false; check(0.5)
+bar:SetStatusBarColor(0.7); check(0.7)
+db.classColor = true; check(0.2)
 ns.healthEnabled.target = false
 check(0.5)
 bar:SetStatusBarColor(0.9); check(0.9)

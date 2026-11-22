@@ -8,9 +8,9 @@ FlareUI RP displays Total RP 3 names and colours on FlareUI’s player and targe
 2. Enable **Unit Frames**, **Nameplates**, or both in FlareUI.
 3. Open **Total RP 3 → Settings → FlareUI RP**. All five options are on by default and can be changed independently without a reload.
 
-**Unit frames:** Show RP names inside the player and target frames and, when enabled, above them. Each label respects its own first/full-name choice. Player and target health colours have separate switches; FlareUI’s low-health warnings and health gradients keep priority.
+**Unit frames:** Enable **Class Colours** on the player or target frame in FlareUI to replace its class colour with the RP profile colour. With Class Colours off, the bar keeps its normal colour. Low-health warnings and health gradients keep priority. RP names work independently and follow each label’s first/full-name choice.
 
-**Nameplates:** Toggle RP names and colours separately. On full plates, the RP colour goes on the health fill and FlareUI controls the text colour. In **Name Only** mode, the colour goes on the text instead. NPCs keep their normal display.
+**Nameplates:** Choose **Class & Reaction** in FlareUI to use RP colours on player health fills. Reaction colours, health gradients, and full-plate name text stay as configured. In **Name Only** mode, RP colour replaces class-coloured text; party and raid name colours keep priority. NPCs keep their normal display.
 
 **Names Above Plate** uses its own first/full-name setting, even when no name is shown inside the bar.
 

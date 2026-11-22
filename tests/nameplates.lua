@@ -1,7 +1,7 @@
 local ns, callbacks, handlers, values, elements = {}, {}, {}, {}, {}
 local queued, person, restricted = nil, "A", false
 local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() return false end },
-    nameSlot = "left", levelFollow = true, nameFull = false, nameOnly = true, tdb = {}, name = {
+    nameSlot = "left", levelFollow = true, nameFull = false, nameOnly = true, tdb = { healthColor = "class" }, name = {
         SetFormattedText = function(self, fmt, ...) self.text = fmt:format(...) end,
         SetText = function(self, text) self.text = text end,
         SetTextColor = function(self, r) self.red = r end,
@@ -11,6 +11,13 @@ FlareUI = { Nameplates = { LevelPrefix = function() return "12 " end, UpdateName
     if p.aboveName and p.aboveKind and p.aboveName:IsShown() then p.aboveName:SetText(person) end
 end, BarColor = function(p, r) p.fill = r end, UpdateColor = function(p) p.fill = 0.4 end } }
 local tapped
+local raid
+function IsInRaid() return raid end
+function UnitInRaid() return 1 end
+function UnitInParty() return true end
+function UnitIsConnected() return true end
+function UnitClass() return "Priest", "PRIEST" end
+C_ClassColor = { GetClassColor = function() return {} end }
 function UnitIsTapDenied() return tapped end
 function hooksecurefunc(t, key, fn)
     local original = t[key]
@@ -38,6 +45,10 @@ ns.StartNameplates({ registerConfigKey = function(k, v) values[k] = v end,
 local function check(text, red) assert(plate.name.text == text and plate.name.red == red) end
 local paint = FlareUI.Nameplates.UpdateName
 paint(plate); check("12 Aster", 0.8)
+plate.tdb.groupColor = true; paint(plate); check("12 Aster", 0.5)
+raid = true; paint(plate); check("12 Aster", 0.5)
+plate.tdb.raidColor = false; paint(plate); check("12 Aster", 0.8)
+raid, plate.tdb.groupColor = false, false
 plate.nameFull = true
 paint(plate); check("12 Aster Moonfall", 0.8)
 handlers.flareui_rp_plate_names(nil, false); check("12 A", 0.8)
@@ -51,6 +62,10 @@ paint(plate); assert(plate.aboveName.text == "Aster" and plate.name.text == "12 
 records.A[3] = 0.6
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
+for _, mode in ipairs({ "reaction", "off" }) do
+    plate.tdb.healthColor = mode; bar(plate); assert(plate.fill == 0.4)
+end
+plate.tdb.healthColor = "class"
 plate.nameSlot = nil
 plate.aboveKind = "fullname"
 paint(plate); assert(plate.aboveName.text == "Aster Moonfall")

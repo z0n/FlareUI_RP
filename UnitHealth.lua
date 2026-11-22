@@ -33,7 +33,7 @@ function ns.PaintHealth(frame, unit)
     local db = units and units[unit]
     if not db or FlareUI.EditPreviewing() then return end
     local mode = uf.HealthColorMode(db)
-    if ns.healthEnabled[unit] and s.r and mode ~= "health" then
+    if ns.healthEnabled[unit] and s.r and FlareUI.ClassColorsOn(db) and mode ~= "health" then
         local player, connected, tapped = UnitIsPlayer(unit), UnitIsConnected(unit), UnitIsTapDenied(unit)
         if canaccessallvalues(player, connected, tapped) and player and connected and not tapped
             and canaccessallvalues(UnitNameUnmodified(unit)) and TRP3_NameUtil.GetQualifiedName(unit) == s.id then

@@ -8,10 +8,28 @@ local function Live(p)
     return p.gamePlate and not p.gamePlate:IsForbidden() and canaccessvalue(p.unit) and p.unit
 end
 
+-- Use the reason for FlareUI's colour, not its RGB: class and group palettes
+-- can have identical values. An unset raid option inherits the party option.
+local function ClassName(p)
+    local db = p.tdb
+    if not db then return false end
+    local member
+    if IsInRaid() then
+        local raid = db.raidColor
+        if raid == nil then raid = db.groupColor end
+        if raid then member = UnitInRaid(p.unit) end
+    elseif db.groupColor then
+        member = UnitInParty(p.unit)
+    end
+    if not canaccessvalue(member) or member then return false end
+    local _, class = UnitClass(p.unit)
+    return canaccessvalue(class) and class and C_ClassColor.GetClassColor(class)
+end
+
 local function Paint(p)
     if not Live(p) then return end
     seen[p] = true
-    local textColour = colours and p.nameOnly
+    local textColour = colours and p.nameOnly and ClassName(p)
     -- 7.0.4 can show a separate name even when no bar text slot contains one.
     local above = names and p.aboveKind and p.aboveName and p.aboveName:IsShown()
     if not above and not (p.nameSlot and (names or textColour)) then return end
@@ -34,9 +52,9 @@ end
 local function PaintBar(p)
     if not Live(p) then return end
     seen[p] = true
-    if not colours or p.nameOnly or not p.tdb or p.tdb.healthColor == "health" or p.threatRGB then return end
-    local tapped = UnitIsTapDenied(p.unit)
-    if not canaccessvalue(tapped) or tapped then return end
+    if not colours or p.nameOnly or not p.tdb or p.tdb.healthColor ~= "class" or p.threatRGB then return end
+    local tapped, connected = UnitIsTapDenied(p.unit), UnitIsConnected(p.unit)
+    if not canaccessallvalues(tapped, connected) or tapped or not connected then return end
     if p.tdb.colorFocus and p.gamePlate == C_NamePlate.GetNamePlateForUnit("focus") then return end
     local r, g, b = ns.ProfileColor(p.unit)
     if r then np.BarColor(p, r, g, b) end
@@ -75,7 +93,7 @@ function ns.StartNameplates(config, elements)
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "RP Names on Nameplates",
         help = "Show RP names on floating player nameplates using FlareUI's name format." }
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "RP Nameplate Colour",
-        help = "Colour the health fill on player plates, or the text in Name Only mode. Threat and health colours take priority." }
+        help = "Choose Class & Reaction in FlareUI to replace player bar class colours. On Name Only plates, RP colour replaces class-coloured text, not party or raid colours." }
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
