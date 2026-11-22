@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+
+# Check the shipped files without requiring a WoW client or either dependency.
+luajit - <<'LUA'
+local count = 0
+for line in io.lines("FlareUI_RP.toc") do
+    local path = line:match("^%s*(.-)%s*$"):gsub("\\", "/")
+    if path ~= "" and path:sub(1, 1) ~= "#" then
+        if path:lower():match("%.lua$") then
+            assert(loadfile(path))
+            count = count + 1
+        else
+            assert(io.open(path, "rb")):close()
+        end
+    end
+end
+assert(count > 0, "No Lua files in FlareUI_RP.toc")
+print(("PASS: compiled %d TOC-listed Lua files"):format(count))
+LUA
+
+# Each test installs its own WoW, TRP3 and FlareUI globals.
+for test in tests/*.lua; do
+    luajit "$test"
+done

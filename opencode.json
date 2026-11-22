@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "references": {
+    "FlareUI": {
+      "path": "../FlareUI",
+      "description": "Use the latest public Forever release for unit-frame and nameplate behaviour; compare upstream main only to identify unreleased changes."
+    },
+    "TotalRP3": {
+      "path": "../Total-RP-3",
+      "description": "Verify profile lookup, identity and callbacks against the latest public Forever release; report unreleased differences separately."
+    }
+  }
+}

@@ -1,0 +1,9 @@
+package-as: FlareUI_RP
+
+ignore:
+  - .github
+  - AGENTS.md
+  - README.md
+  - opencode.json
+  - tests
+  - tools

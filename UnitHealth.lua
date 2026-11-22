@@ -1,0 +1,71 @@
+local _, ns = ...
+local states = { player = {}, target = {} }
+ns.healthEnabled = {}
+
+-- Called on target/name/profile changes, not on every health tick.
+function ns.ReadHealthColor(unit)
+    local s = states[unit]
+    local nr, ng, nb, nextID = ns.ProfileColor(unit)
+    if nr ~= s.r or ng ~= s.g or nb ~= s.b then s.curve = nil end
+    s.r, s.g, s.b, s.id = nr, ng, nb, nextID
+end
+
+local function LowColor(tint, unit, s)
+    if not s.curve then
+        -- Keep one curve, rather than adding arbitrary profile RGBs to the
+        -- host's permanent class-palette cache. Blizzard evaluates secret HP.
+        local curve = C_CurveUtil.CreateColorCurve()
+        curve:SetType(Enum.LuaCurveType.Step)
+        curve:AddPoint(0, CreateColor(tint.RED[1], tint.RED[2], tint.RED[3], 1))
+        curve:AddPoint(tint.AT, CreateColor(s.r, s.g, s.b, 1))
+        s.curve = curve
+    end
+    return tint.CurveRGB(unit, s.curve)
+end
+
+function ns.PaintHealth(frame, unit)
+    local s = states[unit]
+    if not ns.healthEnabled[unit] and not s.applied then return end
+    if not frame or not frame.Health or not UnitExists(unit) then return end
+    local uf = FlareUI.UnitFrames
+    local profile = FlareUI.db and FlareUI.db.profile
+    local units = profile and profile.unitframes and profile.unitframes.units
+    local db = units and units[unit]
+    if not db or FlareUI.EditPreviewing() then return end
+    local mode = uf.HealthColorMode(db)
+    if ns.healthEnabled[unit] and s.r and mode ~= "health" then
+        local player, connected, tapped = UnitIsPlayer(unit), UnitIsConnected(unit), UnitIsTapDenied(unit)
+        if canaccessallvalues(player, connected, tapped) and player and connected and not tapped
+            and canaccessallvalues(UnitNameUnmodified(unit)) and TRP3_NameUtil.GetQualifiedName(unit) == s.id then
+            if mode == "off" then
+                frame.Health:SetStatusBarColor(s.r, s.g, s.b)
+                s.applied = true
+                return
+            elseif mode == "low" and uf.HealthTint and C_CurveUtil and UnitHealthPercent then
+                local ok, cr, cg, cb = pcall(LowColor, uf.HealthTint, unit, s)
+                if ok then
+                    frame.Health:SetStatusBarColor(cr, cg, cb)
+                    s.applied = true
+                    return
+                end
+            end
+        end
+    end
+    if s.applied then
+        frame.Health:SetStatusBarColor(uf.HealthBarColor(unit, FlareUI.ClassColorsOn(db), db))
+        s.applied = nil
+    end
+end
+
+function ns.StartUnitHealth()
+    local uf = FlareUI.UnitFrames
+    if not (uf.FillSlots and uf.HealthColorMode and uf.HealthBarColor and FlareUI.ClassColorsOn and FlareUI.EditPreviewing) then return end
+    -- UpdateHealth finishes by filling the health text slots, after choosing
+    -- its bar colour. Do not hook the bar setter or run a polling timer.
+    hooksecurefunc(uf, "FillSlots", function(frame, bar)
+        if bar ~= "health" then return end
+        if frame == _G.FlareUI_UF_Player then ns.PaintHealth(frame, "player")
+        elseif frame == _G.FlareUI_UF_Target then ns.PaintHealth(frame, "target") end
+    end)
+    ns.unitHealthActive = true
+end
