@@ -8,11 +8,15 @@ local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() retu
     } }
 FlareUI = { Nameplates = { LevelPrefix = function() return "12 " end, UpdateName = function(p)
     p.name:SetText("12 " .. person); p.name:SetTextColor(0.5)
-    if p.aboveName and p.aboveKind and p.aboveName:IsShown() then p.aboveName:SetText(person) end
+    if p.aboveName and p.aboveKind and p.aboveName:IsShown() then
+        p.aboveName:SetText(person)
+        p.aboveName:SetTextColor(p.name.red)
+    end
 end, BarColor = function(p, r) assert(canaccessallvalues(p.barR, p.barG, p.barB)); p.fill = r end,
 UpdateColor = function(p) p.fill = 0.4 end } }
 local tapped
-local raid
+local raid, guild
+function UnitIsInMyGuild() return guild end
 function IsInRaid() return raid end
 function UnitInRaid() return 1 end
 function UnitInParty() return true end
@@ -25,8 +29,8 @@ function hooksecurefunc(t, key, fn)
     t[key] = function(p) original(p); fn(p) end
 end
 local records = { A = { "Aster", "Aster Moonfall", 0.8 } }
-function canaccessvalue() return true end
 local secret = {}
+function canaccessvalue(value) return value ~= secret end
 function canaccessallvalues(...)
     for i = 1, select("#", ...) do if select(i, ...) == secret then return false end end
     return not restricted
@@ -54,6 +58,15 @@ plate.tdb.groupColor = true; paint(plate); check("12 Aster", 0.5)
 raid = true; paint(plate); check("12 Aster", 0.5)
 plate.tdb.raidColor = false; paint(plate); check("12 Aster", 0.8)
 raid, plate.tdb.groupColor = false, false
+plate.kind, plate.tdb.guildColor, guild = "friendlyPlayer", true, true
+paint(plate); check("12 Aster", 0.5) -- guild colour wins over RP colour
+guild = secret
+paint(plate); check("12 Aster", 0.5) -- restricted membership is not a class-colour decision
+guild = false
+paint(plate); check("12 Aster", 0.8)
+guild, plate.kind = true, "enemyPlayer"
+paint(plate); check("12 Aster", 0.8) -- guild setting applies only to friendly players
+guild, plate.tdb.guildColor = false, false
 plate.nameFull = true
 paint(plate); check("12 Aster Moonfall", 0.8)
 handlers.flareui_rp_plate_names(nil, false); check("12 A", 0.8)
@@ -61,12 +74,23 @@ handlers.flareui_rp_plate_colours(nil, false); check("12 A", 0.5)
 handlers.flareui_rp_plate_names(nil, true); check("12 Aster Moonfall", 0.5)
 handlers.flareui_rp_plate_colours(nil, true)
 plate.nameOnly = false
-plate.aboveName = { SetText = plate.name.SetText, IsShown = function() return true end }
+plate.aboveName = { SetText = plate.name.SetText, SetTextColor = plate.name.SetTextColor, IsShown = function() return true end }
 plate.aboveKind = "firstname"
 paint(plate); assert(plate.aboveName.text == "Aster" and plate.name.text == "12 Aster Moonfall")
 records.A[3] = 0.6
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
+plate.tdb.nameClassColor = true
+paint(plate); check("12 Aster Moonfall", 0.6); assert(plate.aboveName.red == 0.6)
+handlers.flareui_rp_plate_names(nil, false); check("12 A", 0.6)
+handlers.flareui_rp_plate_colours(nil, false); check("12 A", 0.5)
+assert(plate.aboveName.red == 0.5)
+handlers.flareui_rp_plate_names(nil, true)
+handlers.flareui_rp_plate_colours(nil, true)
+plate.tdb.groupColor = true
+paint(plate); check("12 Aster Moonfall", 0.5); assert(plate.aboveName.red == 0.5) -- group colour wins
+plate.tdb.groupColor, plate.tdb.nameClassColor = false, false
+paint(plate); check("12 Aster Moonfall", 0.5) -- default full-plate text stays stock
 plate.barG = secret
 bar(plate); assert(plate.fill == 0.4) -- host repaint stands, no extra cache comparison
 plate.barG = nil

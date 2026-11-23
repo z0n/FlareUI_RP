@@ -14,7 +14,7 @@ For manual installs from [GitHub Releases](https://github.com/z0n/FlareUI_RP/rel
 
 **Party and raid:** Each has separate RP name and health-colour switches. In Edit Mode, select **Party** or **Raid** and enable **Look → Class Colours** to use RP health colours on member tiles. Party settings follow the active Classic or Raid Style; raid main-tank member tiles follow the raid settings. Pets, members’ targets and boss frames are unaffected.
 
-**Nameplates:** Choose **Class & Reaction** in FlareUI to use RP colours on player health fills. Reaction colours, health gradients, and full-plate name text stay as configured. In **Name Only** mode, RP colour replaces class-coloured text; party and raid name colours keep priority. NPCs keep their normal display.
+**Nameplates:** Choose **Class & Reaction** in FlareUI to use RP colours on player health fills. Reaction colours and health gradients stay as configured. RP colour replaces class-coloured text in **Name Only** mode and on full plates with **Colour Names by Class** enabled, including their above-plate names. Party, raid and guild name colours keep priority. NPCs keep their normal display.
 
 **Names Above Plate** uses its own first/full-name setting, even when no name is shown inside the bar.
 

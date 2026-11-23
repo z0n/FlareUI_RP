@@ -18,7 +18,7 @@ end
 -- can have identical values. An unset raid option inherits the party option.
 local function ClassName(p)
     local db = p.tdb
-    if not db then return false end
+    if not db or not (p.nameOnly or db.nameClassColor) then return false end
     local member
     if IsInRaid() then
         local raid = db.raidColor
@@ -28,6 +28,10 @@ local function ClassName(p)
         member = UnitInParty(p.unit)
     end
     if not canaccessvalue(member) or member then return false end
+    if p.nameOnly and db.guildColor and p.kind == "friendlyPlayer" and UnitIsInMyGuild then
+        local guild = UnitIsInMyGuild(p.unit)
+        if not canaccessvalue(guild) or guild then return false end
+    end
     local _, class = UnitClass(p.unit)
     return canaccessvalue(class) and class and C_ClassColor.GetClassColor(class)
 end
@@ -35,7 +39,7 @@ end
 local function Paint(p)
     if not Live(p) then return end
     seen[p] = true
-    local textColour = colours and p.nameOnly and ClassName(p)
+    local textColour = colours and ClassName(p)
     -- 7.0.4 can show a separate name even when no bar text slot contains one.
     local above = names and p.aboveKind and p.aboveName and p.aboveName:IsShown()
     if not above and not (p.nameSlot and (names or textColour)) then return end
@@ -52,7 +56,13 @@ local function Paint(p)
         local prefix = p.levelFollow and np.LevelPrefix(p.unit)
         if prefix then p.name:SetFormattedText("%s%s", prefix, name) else p.name:SetText(name) end
     end
-    if color then p.name:SetTextColor(color:GetRGB()) end
+    if color then
+        p.name:SetTextColor(color:GetRGB())
+        -- The host copies the bar name's colour to its above-plate label.
+        if p.aboveKind and p.aboveName and p.aboveName:IsShown() then
+            p.aboveName:SetTextColor(color:GetRGB())
+        end
+    end
 end
 
 local function PaintBar(p)
@@ -111,7 +121,7 @@ function ns.StartNameplates(config, elements)
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "Show RP Names",
         help = "Show the RP name on or above the plate. FlareUI controls its position and name format." }
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Colours",
-        help = "Colour the health fill on a full plate, or the name text on a Name Only plate. Party and raid name colours keep priority." }
+        help = "Replace class colours on health fills and names, including Colour Names by Class on full plates. Party, raid and guild name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
