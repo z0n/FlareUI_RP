@@ -58,8 +58,21 @@ local function Paint(p)
     end
     local color = textColour and profile:GetCustomColorForDisplay()
     if color then
-        if p.nameSlot then p.name:SetTextColor(color:GetRGB()) end
-        if above then p.aboveName:SetTextColor(color:GetRGB()) end
+        local r, g, b = color:GetRGB()
+        if above then p.aboveName:SetTextColor(r, g, b) end
+        if p.nameSlot then
+            -- FlareUI saves the unlifted class colour only when it lightens
+            -- the in-bar label. Follow that decision on this paint.
+            local lift = p.aboveColor and np.C and np.C.NAME_LIFT
+            if lift then
+                if canaccessallvalues(r, g, b) then
+                    r, g, b = r + (1 - r) * lift, g + (1 - g) * lift, b + (1 - b) * lift
+                else
+                    r, g, b = 1, 1, 1
+                end
+            end
+            p.name:SetTextColor(r, g, b)
+        end
     end
 end
 

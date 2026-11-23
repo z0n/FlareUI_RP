@@ -4,9 +4,9 @@ local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() retu
     nameSlot = "left", levelFollow = true, nameFull = false, nameOnly = true, tdb = { healthColor = "class" }, name = {
         SetFormattedText = function(self, fmt, ...) self.text = fmt:format(...) end,
         SetText = function(self, text) self.text = text end,
-        SetTextColor = function(self, r) self.red = r end,
+        SetTextColor = function(self, r, g, b) self.red, self.green, self.blue = r, g, b end,
     } }
-FlareUI = { Nameplates = { LevelPrefix = function() return "12 " end, UpdateName = function(p)
+FlareUI = { Nameplates = { C = { NAME_LIFT = 0.6 }, LevelPrefix = function() return "12 " end, UpdateName = function(p)
     local stock = (p.levelFollow and "12 " or "") .. person
     if p.nameSlot then p.name:SetText(stock) end
     p.name:SetTextColor(0.5)
@@ -84,8 +84,15 @@ records.A[3] = 0.6
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
 plate.tdb.nameClassColor = true
+-- No lift from the host (including older releases): keep the display colour.
 paint(plate); check("12 Aster Moonfall", 0.6); assert(plate.aboveName.red == 0.6)
-handlers.flareui_rp_plate_names(nil, false); check("12 A", 0.6)
+plate.aboveColor = {} -- stock UpdateBarName chose its in-bar contrast treatment
+paint(plate); bar(plate)
+check("12 Aster Moonfall", 0.84)
+assert(plate.name.green == 0.6 and plate.name.blue == 0.6)
+assert(plate.aboveName.red == 0.6 and plate.aboveName.green == 0 and plate.fill == 0.3)
+handlers.flareui_rp_plate_names(nil, false); check("12 A", 0.84)
+plate.aboveColor = nil
 handlers.flareui_rp_plate_colours(nil, false); check("12 A", 0.5)
 assert(plate.aboveName.red == 0.5)
 handlers.flareui_rp_plate_names(nil, true)
