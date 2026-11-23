@@ -105,10 +105,13 @@ function ns.StartNameplates(config, elements)
     names, colours = config.getValue(nameKey), config.getValue(colourKey)
     config.registerHandler(nameKey, function(_, on) names = on; Refresh(false) end)
     config.registerHandler(colourKey, function(_, on) colours = on; Refresh(true) end)
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "RP Names on Nameplates",
-        help = "Show RP names on floating player nameplates using FlareUI's name format." }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "RP Nameplate Colour",
-        help = "Choose Class & Reaction in FlareUI to replace player bar class colours. On Name Only plates, RP colour replaces class-coloured text, not party or raid colours." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Floating Nameplates" }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigParagraph",
+        title = "These are the names and bars above players in the world. To colour their bars, choose a player plate in FlareUI > Nameplates, then Style > Look > Colour By > Class & Reaction." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "Show RP Names",
+        help = "Show the RP name on or above the plate. FlareUI controls its position and name format." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Colours",
+        help = "Colour the health fill on a full plate, or the name text on a Name Only plate. Party and raid name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do

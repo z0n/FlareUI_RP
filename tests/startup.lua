@@ -17,9 +17,16 @@ local function run(hasNames, hasPlates)
         assert(loadfile(file))("FlareUI_RP", ns)
     end
     events.WORKFLOW_ON_LOADED()
-    assert(page and page.id == "flareui_rp")
+    assert(page and page.id == "main_config_flareui_rp")
     assert(not not hooks.SetName == hasNames and not not hooks.UpdateName == hasPlates)
-    assert(#page.elements == (hasNames and 1 or 0) + (hasPlates and 2 or 0))
+    local section, controls = nil, {}
+    for _, element in ipairs(page.elements) do
+        if element.inherit == "TRP3_ConfigH1" then section = element.title
+        elseif element.configKey then controls[element.configKey] = assert(section) end
+    end
+    assert(controls.flareui_rp_unit_names == (hasNames and "Player & Target" or nil))
+    assert(controls.flareui_rp_plate_names == (hasPlates and "Floating Nameplates" or nil))
+    assert(not controls.flareui_rp_player_health, "unsupported health controls must stay hidden")
 end
 run(false, true)
 run(true, false)

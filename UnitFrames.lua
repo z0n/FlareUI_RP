@@ -78,15 +78,16 @@ local function StartUnitFrames(config, elements)
         end)
     end
     local playerKey = "flareui_rp_player_health"
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = namesKey, title = "RP Names on Unit Frames",
-        help = "Use profile names inside and above the player and target frames." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Player & Target" }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = namesKey, title = "Show RP Names",
+        help = "Use profile names on your frame and your target's frame." }
     if ns.unitHealthActive then
         HealthSetting(playerKey, "player", "FlareUI_UF_Player")
         HealthSetting(healthKey, "target", "FlareUI_UF_Target")
-        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = healthKey, title = "RP Target Health Colour",
-            help = "Enable Class Colours on the FlareUI target frame to replace a player's class colour with their RP colour. Health tints still take priority." }
-        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = playerKey, title = "RP Player Health Colour",
-            help = "Enable Class Colours on the FlareUI player frame to replace your class colour with your RP colour. Health tints still take priority." }
+        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = playerKey, title = "Colour My Health Bar",
+            help = "Use your profile colour on your own health bar. Low-health warnings and health gradients keep priority." }
+        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = healthKey, title = "Colour My Target's Health Bar",
+            help = "Use the targeted player's profile colour. NPC health bars keep their normal colours." }
     end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
         TRP3_API.RegisterCallback(TRP3_Addon, event, Refresh)
@@ -103,9 +104,12 @@ local function StartUnitFrames(config, elements)
 end
 
 TRP3_API.RegisterCallback(TRP3_Addon, "WORKFLOW_ON_LOADED", function()
-    local config, elements = TRP3_API.configuration, {}
+    local config = TRP3_API.configuration
+    local elements = { { inherit = "TRP3_ConfigParagraph",
+        title = "Enable Unit Frames or Nameplates in FlareUI first. RP names follow your First Name or Full Name setting. If a profile has no name or colour to use, FlareUI keeps its usual one.|n|nFor RP health bars, open Edit Mode, select the frame, and turn on Look > Class Colours. Names work even when Class Colours is off." } }
     StartUnitFrames(config, elements)
     ns.StartGroupFrames(config, elements)
     ns.StartNameplates(config, elements)
-    config.registerConfigurationPage({ id = "flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements })
+    -- TRP3 orders settings by menu ID, not by the displayed (localized) label.
+    config.registerConfigurationPage({ id = "main_config_flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements })
 end)

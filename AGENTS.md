@@ -18,6 +18,8 @@ When adding a new display surface, test both a case where substitution is expect
 
 ## Lua conventions
 
+- In game-facing text, separate settings path steps with a spaced ASCII `>` (for example, `Look > Class Colours`). WoW fonts may render Unicode arrows as empty squares.
+
 - Keep the README focused on current behaviour. Put upstream version comparisons and release-specific notes in work summaries, not the README.
 - Write release notes for players: describe what changed and any settings they need to know about. Keep test instructions and verification results in development notes or PRs.
 

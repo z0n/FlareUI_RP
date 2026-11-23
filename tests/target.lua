@@ -38,7 +38,11 @@ TRP3_API.configuration = {
     registerConfigKey = function(k, v) values[k] = v end,
     getValue = function(k) return values[k] end,
     registerHandler = function(k, fn) handlers[k] = fn end,
-    registerConfigurationPage = function(page) assert(#page.elements == 3) end,
+    registerConfigurationPage = function(page)
+        local count = 0
+        for _, element in ipairs(page.elements) do if element.configKey then count = count + 1 end end
+        assert(count == 3)
+    end,
 }
 C_Timer = { After = function(_, fn) assert(not queued); queued = fn end }
 local function flush() local fn = assert(queued); queued = nil; fn() end
