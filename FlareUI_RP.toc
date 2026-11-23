@@ -1,10 +1,11 @@
 ## Interface: 16001
 ## Title: FlareUI RP
-## Notes: Total RP 3 names and colours on player and target frames and player nameplates.
+## Notes: Total RP 3 names and colours on player, target, party and raid frames and player nameplates.
 ## Version: 0.1.1
 ## Dependencies: FlareUI, totalRP3
 
 Profile.lua
 UnitHealth.lua
 Nameplates.lua
+GroupFrames.lua
 UnitFrames.lua

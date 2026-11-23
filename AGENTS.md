@@ -19,6 +19,7 @@ When adding a new display surface, test both a case where substitution is expect
 ## Lua conventions
 
 - Keep the README focused on current behaviour. Put upstream version comparisons and release-specific notes in work summaries, not the README.
+- Write release notes for players: describe what changed and any settings they need to know about. Keep test instructions and verification results in development notes or PRs.
 
 - Target the Forever client and Lua 5.1. Each addon file receives the shared private namespace with `local _, ns = ...`. Keep helpers and mutable state `local`; put only cross-file interfaces on `ns`. Keep `FlareUI_RP.toc` in dependency order.
 - Prefer clear event-driven code over polling. Keep FlareUI-specific hooks in the rendering adapters and TRP3 identity/profile lookups in `Profile.lua`. Preserve the existing saved setting keys when changing labels.

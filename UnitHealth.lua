@@ -3,8 +3,8 @@ local states = { player = {}, target = {} }
 ns.healthEnabled = {}
 
 -- Called on target/name/profile changes, not on every health tick.
-function ns.ReadHealthColor(unit)
-    local s = states[unit]
+function ns.ReadHealthColor(unit, state)
+    local s = state or states[unit]
     local nr, ng, nb, nextID = ns.ProfileColor(unit)
     if nr ~= s.r or ng ~= s.g or nb ~= s.b then s.curve = nil end
     s.r, s.g, s.b, s.id = nr, ng, nb, nextID
@@ -27,13 +27,19 @@ function ns.PaintHealth(frame, unit)
     local s = states[unit]
     if not ns.healthEnabled[unit] and not s.applied then return end
     if not frame or not frame.Health or not UnitExists(unit) then return end
-    local uf = FlareUI.UnitFrames
     local profile = FlareUI.db and FlareUI.db.profile
     local units = profile and profile.unitframes and profile.unitframes.units
     local db = units and units[unit]
+    ns.ApplyHealth(frame, unit, db, s, ns.healthEnabled[unit])
+end
+
+-- Group tiles use the same palette and tints, but have their own settings and
+-- colour state (a secure raid header can reassign its tile to another unit).
+function ns.ApplyHealth(frame, unit, db, s, enabled)
     if not db or FlareUI.EditPreviewing() then return end
+    local uf = FlareUI.UnitFrames
     local mode = uf.HealthColorMode(db)
-    if ns.healthEnabled[unit] and s.r and FlareUI.ClassColorsOn(db) and mode ~= "health" then
+    if enabled and s.r and FlareUI.ClassColorsOn(db) and mode ~= "health" then
         local player, connected, tapped = UnitIsPlayer(unit), UnitIsConnected(unit), UnitIsTapDenied(unit)
         if canaccessallvalues(player, connected, tapped) and player and connected and not tapped
             and canaccessallvalues(UnitNameUnmodified(unit)) and TRP3_NameUtil.GetQualifiedName(unit) == s.id then

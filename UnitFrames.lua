@@ -98,6 +98,7 @@ end
 TRP3_API.RegisterCallback(TRP3_Addon, "WORKFLOW_ON_LOADED", function()
     local config, elements = TRP3_API.configuration, {}
     StartUnitFrames(config, elements)
+    ns.StartGroupFrames(config, elements)
     ns.StartNameplates(config, elements)
     config.registerConfigurationPage({ id = "flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements })
 end)
