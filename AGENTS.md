@@ -1,5 +1,12 @@
 # Working on FlareUI RP
 
+## Workflow
+
+1. **Check dependencies.** Fetch tags and the upstream default branches in `../FlareUI` and `../Total-RP-3`. Verify the latest public Forever releases of [FlareUI](https://github.com/malkkav/FlareUI/releases) and [TRP3](https://github.com/Total-RP/Total-RP-3/releases). Read the released source with `git show <release>:<path>` without changing either checkout. Report the versions and briefly summarise any unreleased changes and their relevance; don’t depend on them.
+2. **Implement and verify** the feature against those releases. Leave changes uncommitted unless asked.
+3. **When asked to prepare a release,** review changes since the last tag, update `CHANGELOG.md` and `## Version` in `FlareUI_RP.toc`, and run `./tools/check`. Give the maintainer the exact Git commands to tag the release commit and push the branch and tag together; pushing the tag publishes the addon.
+4. **Check the CurseForge description** against the release. If it’s still accurate, say so. If it’s stale, provide a concise, paste-ready Markdown replacement. If you can’t read the live description, ask for its current text.
+
 ## Design principle: substitute RP identity, preserve FlareUI’s choices
 
 For each feature, ask: **What would stock FlareUI show for this unit, in this layout and state?**
@@ -9,12 +16,6 @@ For each feature, ask: **What would stock FlareUI show for this unit, in this la
 - **Fallbacks:** Treat name and colour independently. A profile with only a name changes only the name. When data is unavailable, restricted, or an option is switched off, leave or restore the normal FlareUI display.
 
 When adding a new display surface, test both a case where substitution is expected and one where FlareUI’s choice must win.
-
-## Verify upstream behaviour against releases
-
-- For every implementation or bug fix, check the latest **public, stable release for WoW: Forever** of **both** [FlareUI](https://github.com/malkkav/FlareUI/releases) and [Total RP 3](https://github.com/Total-RP/Total-RP-3/releases). Do not assume `main`, the newest tag, or the neighbouring working copy is what players have installed.
-- Use `../FlareUI` and `../Total-RP-3` as references. Verify each upstream remote, fetch its tags and default branch, match the published version to its tag/commit, then inspect the released file with `git show <release>:<path>`. Do not switch branches in, edit, or reset either checkout to read it.
-- Compare each release with its upstream default branch (`git log --oneline <release>..origin/HEAD` and inspect the diff). In your work summary, identify the release versions used. If either project has unreleased code, explicitly say so, briefly describe the changes, and say whether they affect this addon. Do not depend on an unreleased helper or behaviour. If the public release cannot be verified, say what was verified instead.
 
 ## Lua conventions
 
@@ -36,4 +37,4 @@ Run from the addon root:
 ./tools/check
 ```
 
-Use mocks for settings, missing helpers, late profile updates and recycled plates. Check visual behaviour, combat restrictions and taint in-game on released dependencies. Distinguish local checks from player-confirmed results. Keep changes uncommitted unless the user asks to commit.
+Use mocks for settings, missing helpers, late profile updates and recycled plates. Visual behaviour, combat restrictions and taint need in-game verification on released dependencies.
