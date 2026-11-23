@@ -3,6 +3,7 @@ local target = { Name = { SetText = function(self, name) self.text = name end } 
 FlareUI_UF_Target = target
 local playerFrame = { Name = { SetText = target.Name.SetText } }
 FlareUI_UF_Player = playerFrame
+target.fuiUnit, playerFrame.fuiUnit = "target", "player"
 local function aboveLabel()
     return { SetText = target.Name.SetText, shown = true, IsShown = function(self) return self.shown end }
 end
@@ -13,7 +14,7 @@ local records = { A = { "Lady Aster", "Lady Aster Moonfall" }, Self = { "Robin",
 function UnitExists(unit) return unit == "player" or id ~= nil end
 function UnitIsPlayer(unit) return unit == "player" or not npc end
 function UnitNameUnmodified(unit) return unit == "player" and "Self" or id end
-function canaccessvalue() return not restricted end
+function canaccessvalue() return true end
 function canaccessallvalues() return not restricted end
 TRP3_NameUtil = { GetQualifiedName = function(unit) assert(not restricted and UnitIsPlayer(unit)); return UnitNameUnmodified(unit) end }
 AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(key)
@@ -41,7 +42,7 @@ TRP3_API.configuration = {
     registerConfigurationPage = function(page)
         local count = 0
         for _, element in ipairs(page.elements) do if element.configKey then count = count + 1 end end
-        assert(count == 3)
+        assert(count == 6)
     end,
 }
 C_Timer = { After = function(_, fn) assert(not queued); queued = fn end }
@@ -108,4 +109,25 @@ afterName(target)
 assert(target.Name.text == "A")
 local other = { Name = { SetText = function() error("not the target frame") end } }
 afterName(other)
+restricted, npc, full = false, false, false
+for unit, key in pairs({ focus = "Focus", targettarget = "TargetOfTarget", focustarget = "TargetOfFocus" }) do
+    local f = { fuiUnit = unit, Name = aboveLabel(), NameAboveText = aboveLabel() }
+    _G["FlareUI_UF_" .. key] = f
+    layouts[unit] = { kind = "fullname" }
+    id = "A"
+    afterName(f)
+    assert(f.Name.text == "Lady Aster" and f.NameAboveText.text == "Lady Aster Moonfall")
+    id, npc = "Spider", true
+    afterName(f)
+    assert(f.Name.text == "Spider" and f.NameAboveText.text == "Spider")
+    id, npc = "A", false
+    f.IsForbidden = function() return true end
+    afterName(f)
+    assert(f.Name.text == "Spider")
+    f.IsForbidden = nil
+    handlers.flareui_rp_unit_names(nil, false)
+    assert(f.Name.text == "A")
+    handlers.flareui_rp_unit_names(nil, true)
+    assert(f.Name.text == "Lady Aster")
+end
 print("PASS: independent player and target names, format, NPC and restricted fallback, late and deleted profiles")

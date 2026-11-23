@@ -15,13 +15,9 @@ function ns.Profile(unit)
     return AddOn_TotalRP3.Player.CreateFromCharacterID(id), id
 end
 
-function ns.ProfileColor(unit)
-    local profile, id = ns.Profile(unit)
+function ns.ProfileColor(profile)
     local color = profile and profile:GetCustomColor()
-    if color then
-        local r, g, b = color:GetRGB()
-        return r, g, b, id
-    end
+    if color then return color:GetRGB() end
 end
 
 function ns.ProfileName(profile, full)

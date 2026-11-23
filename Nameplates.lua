@@ -73,7 +73,7 @@ local function PaintBar(p)
     local tapped, connected = UnitIsTapDenied(p.unit), UnitIsConnected(p.unit)
     if not canaccessallvalues(tapped, connected) or tapped or not connected then return end
     if p.tdb.colorFocus and p.gamePlate == C_NamePlate.GetNamePlateForUnit("focus") then return end
-    local r, g, b = ns.ProfileColor(p.unit)
+    local r, g, b = ns.ProfileColor(ns.Profile(p.unit))
     if r then np.BarColor(p, r, g, b) end
 end
 

@@ -10,19 +10,18 @@ local function DisplayName(unit, full, profile)
 end
 
 local function Paint(frame, settings, restoreNames)
-    if not frame or not frame.Name then return end
-    local unit
-    if frame == _G.FlareUI_UF_Player then unit = "player"
-    elseif frame == _G.FlareUI_UF_Target then unit = "target"
-    else return end
-    if not UnitExists(unit) then return end
+    local unit = ns.DirectUnit(frame)
+    if not unit or not frame.Name or not ns.DirectExists(unit) or (FlareUI.EditPreviewing and FlareUI.EditPreviewing()) then return end
+    local rp
     if ns.unitHealthActive and ns.healthEnabled[unit] then
-        ns.ReadHealthColor(unit)
+        rp = ns.ReadHealthColor(unit)
         ns.PaintHealth(frame, unit)
+    elseif ns.namesEnabled then
+        rp = ns.Profile(unit)
     end
     if not ns.namesEnabled and not restoreNames then return end
     local full = FlareUI.UnitFrames.ShowsFullName(frame)
-    local rp = ns.namesEnabled and ns.Profile(unit)
+    if not ns.namesEnabled then rp = nil end
     local name = DisplayName(unit, full, rp)
     frame.Name:SetText(name)
 
@@ -43,13 +42,15 @@ local function Paint(frame, settings, restoreNames)
 end
 
 local queued
+local function PaintAll(restoreNames)
+    for _, frameName in pairs(ns.directFrames) do Paint(_G[frameName], nil, restoreNames) end
+end
 local function Refresh()
-    if queued or not (ns.namesEnabled or ns.healthEnabled.target or ns.healthEnabled.player) then return end
+    if queued then return end
     queued = true
     C_Timer.After(0, function()
         queued = nil
-        Paint(_G.FlareUI_UF_Player)
-        Paint(_G.FlareUI_UF_Target)
+        PaintAll()
     end)
 end
 
@@ -64,30 +65,38 @@ local function StartUnitFrames(config, elements)
     ns.namesEnabled = config.getValue(namesKey)
     config.registerHandler(namesKey, function(_, on)
         ns.namesEnabled = on
-        Paint(_G.FlareUI_UF_Player, nil, not on)
-        Paint(_G.FlareUI_UF_Target, nil, not on)
+        PaintAll(not on)
     end)
-    local function HealthSetting(key, unit, frameName)
+    local function HealthSetting(key, unit)
         config.registerConfigKey(key, true)
         ns.healthEnabled[unit] = config.getValue(key)
         config.registerHandler(key, function(_, on)
             ns.healthEnabled[unit] = on
             if not ns.unitHealthActive then return end
+            local frame = _G[ns.directFrames[unit]]
+            if ns.DirectUnit(frame) ~= unit or not ns.DirectExists(unit) then return end
             if on then ns.ReadHealthColor(unit) end
-            ns.PaintHealth(_G[frameName], unit)
+            ns.PaintHealth(frame, unit)
         end)
     end
     local playerKey = "flareui_rp_player_health"
-    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Player & Target" }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Unit Frames" }
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = namesKey, title = "Show RP Names",
-        help = "Use profile names on your frame and your target's frame." }
+        help = "Use profile names on Player, Target, Focus, Target of Target and Target of Focus." }
     if ns.unitHealthActive then
-        HealthSetting(playerKey, "player", "FlareUI_UF_Player")
-        HealthSetting(healthKey, "target", "FlareUI_UF_Target")
+        HealthSetting(playerKey, "player")
+        HealthSetting(healthKey, "target")
         elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = playerKey, title = "Colour My Health Bar",
             help = "Use your profile colour on your own health bar. Low-health warnings and health gradients keep priority." }
         elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = healthKey, title = "Colour My Target's Health Bar",
             help = "Use the targeted player's profile colour. NPC health bars keep their normal colours." }
+        local labels = { focus = "Focus", targettarget = "Target of Target", focustarget = "Target of Focus" }
+        for _, unit in ipairs({ "focus", "targettarget", "focustarget" }) do
+            local key = "flareui_rp_" .. unit .. "_health"
+            HealthSetting(key, unit)
+            elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Colour " .. labels[unit] .. " Health Bar",
+                help = "Replace this frame's class colour when the player has a profile colour." }
+        end
     end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
         TRP3_API.RegisterCallback(TRP3_Addon, event, Refresh)
@@ -95,8 +104,9 @@ local function StartUnitFrames(config, elements)
     TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", function()
         -- A switch turned off in combat can still have a pending restore.
         if ns.unitHealthActive then
-            if not ns.healthEnabled.player then ns.PaintHealth(_G.FlareUI_UF_Player, "player") end
-            if not ns.healthEnabled.target then ns.PaintHealth(_G.FlareUI_UF_Target, "target") end
+            for unit, frameName in pairs(ns.directFrames) do
+                if not ns.healthEnabled[unit] then ns.PaintHealth(_G[frameName], unit) end
+            end
         end
         Refresh()
     end)

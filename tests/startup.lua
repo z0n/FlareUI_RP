@@ -24,7 +24,7 @@ local function run(hasNames, hasPlates)
         if element.inherit == "TRP3_ConfigH1" then section = element.title
         elseif element.configKey then controls[element.configKey] = assert(section) end
     end
-    assert(controls.flareui_rp_unit_names == (hasNames and "Player & Target" or nil))
+    assert(controls.flareui_rp_unit_names == (hasNames and "Unit Frames" or nil))
     assert(controls.flareui_rp_plate_names == (hasPlates and "Floating Nameplates" or nil))
     assert(not controls.flareui_rp_player_health, "unsupported health controls must stay hidden")
 end

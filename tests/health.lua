@@ -1,6 +1,6 @@
 local id, rgb, db, tick = "Self", { 0.2, 0.4, 0.6 }, { healthColor = "off" }
 local bar = { SetStatusBarColor = function(self, ...) self.color = { ... } end }
-local frame = { Health = bar }
+local frame = { Health = bar, fuiUnit = "target" }
 FlareUI_UF_Target = frame
 local restricted, low, offline, tapped
 function UnitExists() return true end
@@ -9,10 +9,12 @@ function UnitIsConnected() return not offline end
 function UnitIsTapDenied() return tapped end
 function UnitNameUnmodified() return id end
 function canaccessallvalues() return not restricted end
+function canaccessvalue() return true end
 TRP3_NameUtil = { GetQualifiedName = function(unit) assert(not restricted); return unit == "player" and "Me" or id end }
-local ns = { ProfileColor = function(unit)
-    if unit == "player" then return 0.75, 0, 1, "Me" end
-    if rgb then return rgb[1], rgb[2], rgb[3], id end
+local ns = { Profile = function(unit) return unit, unit == "player" and "Me" or id end,
+    ProfileColor = function(unit)
+    if unit == "player" then return 0.75, 0, 1 end
+    if rgb then return rgb[1], rgb[2], rgb[3] end
 end }
 function CreateColor(...) return {...} end
 Enum = { LuaCurveType = { Step = 1 } }
@@ -53,7 +55,7 @@ db.healthColor = "off"
 check(0.2)
 id = "Other"; check(0.5) -- a health tick before the target's name update
 rgb = { 0, 1, 0 }; ns.ReadHealthColor("target"); check(0)
-FlareUI_UF_Player = { Health = { SetStatusBarColor = bar.SetStatusBarColor } }
+FlareUI_UF_Player = { fuiUnit = "player", Health = { SetStatusBarColor = bar.SetStatusBarColor } }
 FlareUI.db.profile.unitframes.units.player = { healthColor = "low" }
 ns.healthEnabled.player = true
 ns.ReadHealthColor("player")
@@ -73,4 +75,20 @@ ns.healthEnabled.target = false; check(0)
 restricted = false; check(0.5)
 ns.healthEnabled.target = true; check(0)
 rgb = nil; ns.ReadHealthColor("target"); check(0.5)
+for unit, key in pairs({ focus = "Focus", targettarget = "TargetOfTarget", focustarget = "TargetOfFocus" }) do
+    local f = { fuiUnit = unit, Health = { SetStatusBarColor = bar.SetStatusBarColor } }
+    _G["FlareUI_UF_" .. key] = f
+    local settings = { healthColor = "off" }
+    FlareUI.db.profile.unitframes.units[unit] = settings
+    ns.healthEnabled[unit] = true
+    id, rgb = "First", { 0.3, 0.2, 0.7 }
+    ns.ReadHealthColor(unit)
+    tick(f, "health"); assert(f.Health.color[1] == 0.3)
+    id = "Second" -- host health poll can precede the chained unit's name update
+    tick(f, "health"); assert(f.Health.color[1] == 0.5)
+    ns.ReadHealthColor(unit)
+    settings.classColor = false
+    f.Health:SetStatusBarColor(0.8)
+    tick(f, "health"); assert(f.Health.color[1] == 0.8)
+end
 print("PASS: target profile colour, low warning, gradient and host fallback")

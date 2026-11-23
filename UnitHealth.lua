@@ -1,13 +1,32 @@
 local _, ns = ...
-local states = { player = {}, target = {} }
+ns.directFrames = {
+    player = "FlareUI_UF_Player", target = "FlareUI_UF_Target", focus = "FlareUI_UF_Focus",
+    targettarget = "FlareUI_UF_TargetOfTarget", focustarget = "FlareUI_UF_TargetOfFocus",
+}
+local states = {}
+for unit in pairs(ns.directFrames) do states[unit] = {} end
 ns.healthEnabled = {}
+
+-- Only the host's live direct frames, never its samples or group tiles.
+function ns.DirectUnit(frame)
+    if not frame or (frame.IsForbidden and frame:IsForbidden()) then return end
+    local unit = frame.fuiUnit
+    if canaccessvalue(unit) and unit and ns.directFrames[unit] and frame == _G[ns.directFrames[unit]] then return unit end
+end
+
+function ns.DirectExists(unit)
+    local exists = UnitExists(unit)
+    return canaccessvalue(exists) and exists
+end
 
 -- Called on target/name/profile changes, not on every health tick.
 function ns.ReadHealthColor(unit, state)
     local s = state or states[unit]
-    local nr, ng, nb, nextID = ns.ProfileColor(unit)
+    local profile, nextID = ns.Profile(unit)
+    local nr, ng, nb = ns.ProfileColor(profile)
     if nr ~= s.r or ng ~= s.g or nb ~= s.b then s.curve = nil end
     s.r, s.g, s.b, s.id = nr, ng, nb, nextID
+    return profile
 end
 
 local function LowColor(tint, unit, s)
@@ -26,7 +45,7 @@ end
 function ns.PaintHealth(frame, unit)
     local s = states[unit]
     if not ns.healthEnabled[unit] and not s.applied then return end
-    if not frame or not frame.Health or not UnitExists(unit) then return end
+    if not frame or (frame.IsForbidden and frame:IsForbidden()) or not frame.Health or not ns.DirectExists(unit) then return end
     local profile = FlareUI.db and FlareUI.db.profile
     local units = profile and profile.unitframes and profile.unitframes.units
     local db = units and units[unit]
@@ -73,8 +92,8 @@ function ns.StartUnitHealth()
     -- its bar colour. Do not hook the bar setter or run a polling timer.
     hooksecurefunc(uf, "FillSlots", function(frame, bar)
         if bar ~= "health" then return end
-        if frame == _G.FlareUI_UF_Player then ns.PaintHealth(frame, "player")
-        elseif frame == _G.FlareUI_UF_Target then ns.PaintHealth(frame, "target") end
+        local unit = ns.DirectUnit(frame)
+        if unit then ns.PaintHealth(frame, unit) end
     end)
     ns.unitHealthActive = true
 end
