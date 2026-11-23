@@ -79,9 +79,10 @@ local function Discover(f)
     end)
 end
 
-local function Refresh(kind)
+local function Refresh(kind, ids)
     for f, s in pairs(tiles) do
-        if not kind or s.kind == kind then
+        local unit = ids and Live(f)
+        if (not kind or s.kind == kind) and (not ids or (unit and ids[ns.CharacterID(unit)])) then
             s.refreshing = true
             securecallfunction(Paint, f, s)
             s.refreshing = nil
@@ -90,11 +91,21 @@ local function Refresh(kind)
 end
 
 local pending
-local function Queue()
-    if pending then return end
+local function Queue(id)
     if not (options.party.names or options.party.health or options.raid.names or options.raid.health) then return end
-    pending = true
-    C_Timer.After(0, function() pending = nil; Refresh() end)
+    local scheduled = pending ~= nil
+    -- true means a full pass; a broad event always wins over individual IDs.
+    if not id then pending = true
+    elseif pending ~= true then
+        pending = pending or {}
+        pending[id] = true
+    end
+    if scheduled then return end
+    C_Timer.After(0, function()
+        local batch = pending
+        pending = nil
+        Refresh(nil, batch ~= true and batch or nil)
+    end)
 end
 
 function ns.StartGroupFrames(config, elements)
@@ -136,11 +147,15 @@ function ns.StartGroupFrames(config, elements)
     for i = 1, 8 do Header(_G["FlareUI_RaidGroup" .. i]) end
     Header(_G.FlareUI_RaidAll)
     Header(_G.FlareUI_RaidTanksHeader)
-    for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
-        TRP3_API.RegisterCallback(TRP3_Addon, event, Queue)
+    TRP3_API.RegisterCallback(TRP3_Addon, "REGISTER_DATA_UPDATED", function(_, id)
+        if canaccessvalue(id) and type(id) == "string" and id ~= "" then Queue(id) else Queue() end
+    end)
+    local function QueueAll() Queue() end
+    for _, event in ipairs({ "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
+        TRP3_API.RegisterCallback(TRP3_Addon, event, QueueAll)
     end
     for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED" }) do
-        TRP3_API.RegisterCallback(TRP3_API.GameEvents, event, Queue)
+        TRP3_API.RegisterCallback(TRP3_API.GameEvents, event, QueueAll)
     end
     Queue()
 end

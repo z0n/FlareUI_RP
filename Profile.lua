@@ -2,11 +2,15 @@ local _, ns = ...
 
 -- Check both name components before passing the unit to TRP3's identity resolver.
 -- A cached name from the last target must never stand in for a restricted identity.
-function ns.Profile(unit)
+function ns.CharacterID(unit)
     local player = UnitIsPlayer(unit)
     if not canaccessvalue(player) or not player then return end
     if not canaccessallvalues(UnitNameUnmodified(unit)) then return end
-    local id = TRP3_NameUtil.GetQualifiedName(unit)
+    return TRP3_NameUtil.GetQualifiedName(unit)
+end
+
+function ns.Profile(unit)
+    local id = ns.CharacterID(unit)
     if not id then return end
     return AddOn_TotalRP3.Player.CreateFromCharacterID(id), id
 end

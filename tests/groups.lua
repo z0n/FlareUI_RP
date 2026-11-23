@@ -1,5 +1,5 @@
 local ns, values, handlers, events, records, units = {}, {}, {}, {}, {}, {}
-local editing, queued = false
+local editing, queued, lookups = false, nil, 0
 function hooksecurefunc(owner, key, fn)
     local original = assert(owner[key])
     owner[key] = function(...) local result = original(...); fn(...); return result end
@@ -14,6 +14,7 @@ function UnitIsTapDenied() return false end
 function UnitNameUnmodified(u) return units[u] end
 TRP3_NameUtil = { GetQualifiedName = UnitNameUnmodified }
 AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
+    lookups = lookups + 1
     local r = records[id] or {}
     return { GetFirstName = function() return r.first end, GetFullName = function() return r.full end,
         GetCustomColor = function() if r.rgb then return { GetRGB = function() return r.rgb, 0, 0 end } end end }
@@ -58,7 +59,17 @@ flush(); draw(party); draw(raid); draw(boss)
 assert(party.Name.text == "Aster" and party.NameAboveText.text == "Aster Moonfall" and party.Health.red == 0.8)
 assert(raid.Name.text == "B" and raid.Health.red == 0.5 and boss.Name.text == "A" and boss.Health.red == 0.5)
 records.B = { first = "Birch", full = "Birch Winter", rgb = 0.2 }
-events.REGISTER_DATA_UPDATED(); flush()
+local tank = Tile("raid1")
+tank.flareTile, tank.ctx = true, raid.ctx
+draw(tank)
+local before = lookups
+events.REGISTER_DATA_UPDATED(nil, "Stranger"); flush()
+assert(lookups == before, "an unrelated update must not fetch any group profiles")
+records.B.full = "Birch Frost"
+events.REGISTER_DATA_UPDATED(nil, "B"); events.REGISTER_DATA_UPDATED(nil, "B"); flush()
+assert(raid.Name.text == "Birch Frost" and tank.Name.text == "Birch Frost")
+records.B.full = "Birch Winter"
+events.REGISTER_DATA_UPDATED(nil, "A"); events.GROUP_ROSTER_UPDATE(); flush()
 assert(raid.Name.text == "Birch Winter" and raid.Health.red == 0.2)
 raid.fuiUnit, units.raid2 = "raid2", "Unknown"
 draw(raid)
