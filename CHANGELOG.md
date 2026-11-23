@@ -1,4 +1,6 @@
-# FlareUI RP 0.3.0
+# FlareUI RP 0.3.1
 
-- **Focus**, **Target of Target** and **Target of Focus** now show RP names when they point to a player. They follow the same **Show RP Names** switch as Player and Target and respect each label’s first/full-name setting.
-- Each new frame has its own RP health-colour switch under **Total RP 3 > Settings > FlareUI RP > Unit Frames**. To use it, enable **Look > Class Colours** on that frame in FlareUI’s Edit Mode. NPC colours, low-health warnings and health gradients keep priority.
+- RP names above player nameplates now keep the level prefix when **Follow Name** is selected.
+- With **Colour Names by Class** enabled, a name shown only above the plate can now use the player’s RP colour even when **Show RP Names** is off. Party, raid and guild colours still take priority where FlareUI uses them.
+- Party frames in **Raid Style** now follow **Full Player Names** for the member name at the top of each tile.
+- Party and raid frames make fewer Total RP 3 lookups when refreshing names and health colours, and skip lookups when the game restricts access to the unit.
