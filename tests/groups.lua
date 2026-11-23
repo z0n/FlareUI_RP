@@ -59,6 +59,21 @@ local function draw(f)
 end
 flush(); draw(party); draw(raid); draw(boss)
 assert(party.Name.text == "Aster" and party.NameAboveText.text == "Aster Moonfall" and party.Health.red == 0.8)
+local beforePaint = lookups
+events.REGISTER_DATA_UPDATED(nil, "A"); flush()
+assert(lookups == beforePaint + 1, "one profile supplies both names and health on a callback refresh")
+party.NameAboveText.IsShown = function() return false end
+beforePaint = lookups
+draw(party)
+assert(lookups == beforePaint + 1, "a hidden above-name must not add a profile lookup")
+party.NameAboveText.IsShown = function() return true end
+party.NameAboveText.text = "previous above"
+party.Name:SetText("stock member")
+assert(party.NameAboveText.text == "previous above", "member hook must not paint the above-name")
+beforePaint = lookups
+party.Name.text = "previous member"
+FlareUI.NameAbove.SetName(party)
+assert(lookups == beforePaint + 1 and party.Name.text == "previous member" and party.NameAboveText.text == "Aster Moonfall")
 assert(raid.Name.text == "B" and raid.Health.red == 0.5 and boss.Name.text == "A" and boss.Health.red == 0.5)
 party.style, party.btFullName = "partytile", true
 FlareUI.db.profile.unitframes.fullNames = false

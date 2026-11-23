@@ -17,34 +17,45 @@ local function Live(f)
     if not FlareUI.EditPreviewing() and f:IsVisible() and canaccessvalue(unit) and unit and ns.DirectExists(unit) then return unit end
 end
 
-local function Names(f, unit, enabled, restore)
-    local profile = enabled and ns.Profile(unit)
+local function PaintLabel(label, unit, full, profile, restore)
+    local name = profile and ns.ProfileName(profile, full)
+    if name then label:SetFormattedText("%s", name)
+    elseif restore then label:SetText(FlareUI.UnitDisplayName(unit, nil, full)) end
+end
+
+local function MemberName(f, unit, profile, restore)
     if not profile and not restore then return end
     local full
     if pf.SlotOn(f) and not (pf.SlotStyle and pf.SlotStyle(f) == "partytile") then full = f.btFullName ~= false
     else full = FlareUI.db.profile.unitframes.fullNames ~= false end
-    local function Label(label, long)
-        local name = profile and ns.ProfileName(profile, long)
-        if name then label:SetFormattedText("%s", name)
-        elseif restore then label:SetText(FlareUI.UnitDisplayName(unit, nil, long)) end
-    end
-    Label(f.Name, full)
+    PaintLabel(f.Name, unit, full, profile, restore)
+end
+
+local function AboveKind(f)
     if f.NameAboveText and f.NameAboveText:IsShown() then
         local slot, pick = FlareUI.NameAbove.Get(pf.NameAboveDb(f))
-        if slot then Label(f.NameAboveText, pick == "fullname") end
+        if slot then return pick end
     end
+end
+
+local function MemberProfile(unit, s, opt)
+    if opt.health then return ns.ReadHealthColor(unit, s) end
+    if opt.names then return ns.Profile(unit) end
 end
 
 local function Paint(f, s)
     local unit = Live(f)
     if not unit then return end
     local opt = options[s.kind]
+    local profile = MemberProfile(unit, s, opt)
     if opt.names or s.names then
-        Names(f, unit, opt.names, true)
+        local nameProfile = opt.names and profile
+        MemberName(f, unit, nameProfile, true)
+        local pick = AboveKind(f)
+        if pick then PaintLabel(f.NameAboveText, unit, pick == "fullname", nameProfile, true) end
         s.names = opt.names
     end
     if opt.health or s.applied then
-        if opt.health then ns.ReadHealthColor(unit, s) end
         ns.ApplyHealth(f, unit, pf.NameAboveDb(f), s, opt.health)
     end
 end
@@ -63,8 +74,8 @@ local function Discover(f)
         local unit = Live(f)
         if not unit then return end
         local opt = options[kind]
-        if opt.health then ns.ReadHealthColor(unit, s) end
-        if opt.names then Names(f, unit, true, false) end
+        local profile = MemberProfile(unit, s, opt)
+        if opt.names then MemberName(f, unit, profile, false) end
         s.names = opt.names
     end)
     hooksecurefunc(f.Health, "SetStatusBarColor", function()
@@ -133,7 +144,8 @@ function ns.StartGroupFrames(config, elements)
         local s = tiles[f]
         if s and options[s.kind].names then
             local unit = Live(f)
-            if unit then Names(f, unit, true, false) end
+            local pick = unit and AboveKind(f)
+            if pick then PaintLabel(f.NameAboveText, unit, pick == "fullname", ns.Profile(unit), false) end
         end
     end)
     -- Either addon can finish login first. Attach to existing tiles too; the
