@@ -9,7 +9,8 @@ local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() retu
 FlareUI = { Nameplates = { LevelPrefix = function() return "12 " end, UpdateName = function(p)
     p.name:SetText("12 " .. person); p.name:SetTextColor(0.5)
     if p.aboveName and p.aboveKind and p.aboveName:IsShown() then p.aboveName:SetText(person) end
-end, BarColor = function(p, r) p.fill = r end, UpdateColor = function(p) p.fill = 0.4 end } }
+end, BarColor = function(p, r) assert(canaccessallvalues(p.barR, p.barG, p.barB)); p.fill = r end,
+UpdateColor = function(p) p.fill = 0.4 end } }
 local tapped
 local raid
 function IsInRaid() return raid end
@@ -25,7 +26,11 @@ function hooksecurefunc(t, key, fn)
 end
 local records = { A = { "Aster", "Aster Moonfall", 0.8 } }
 function canaccessvalue() return true end
-function canaccessallvalues() return not restricted end
+local secret = {}
+function canaccessallvalues(...)
+    for i = 1, select("#", ...) do if select(i, ...) == secret then return false end end
+    return not restricted
+end
 function UnitIsPlayer() return person ~= "Spider" end
 function UnitNameUnmodified() return person end
 TRP3_NameUtil = { GetQualifiedName = function() assert(not restricted and person ~= "Spider"); return person end }
@@ -62,6 +67,10 @@ paint(plate); assert(plate.aboveName.text == "Aster" and plate.name.text == "12 
 records.A[3] = 0.6
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
+plate.barG = secret
+bar(plate); assert(plate.fill == 0.4) -- host repaint stands, no extra cache comparison
+plate.barG = nil
+bar(plate); assert(plate.fill == 0.3)
 for _, mode in ipairs({ "reaction", "off" }) do
     plate.tdb.healthColor = mode; bar(plate); assert(plate.fill == 0.4)
 end

@@ -21,7 +21,7 @@ C_CurveUtil = { CreateColorCurve = function()
 end }
 function UnitHealthPercent() error("use the host evaluator") end
 local uf = { FillSlots = function() end, HealthColorMode = function(d) return d.healthColor end,
-    HealthBarColor = function() return 0.5, 0.5, 0.5 end,
+    HealthBarColor = function() assert(not restricted, "unsafe restore"); return 0.5, 0.5, 0.5 end,
     HealthTint = { RED = { 1, 0, 0 }, AT = 0.3, CurveRGB = function(_, curve)
         return unpack(curve[low and 0 or 0.3])
     end } }
@@ -68,7 +68,9 @@ offline = true; check(0.5)
 offline = false; check(0)
 tapped = true; check(0.5)
 tapped = false; check(0)
-restricted = true; check(0.5)
-restricted = false; check(0)
+restricted = true; check(0)
+ns.healthEnabled.target = false; check(0)
+restricted = false; check(0.5)
+ns.healthEnabled.target = true; check(0)
 rgb = nil; ns.ReadHealthColor("target"); check(0.5)
 print("PASS: target profile colour, low warning, gradient and host fallback")

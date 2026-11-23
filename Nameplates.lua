@@ -1,6 +1,12 @@
 local _, ns = ...
 local np, names, colours
 local seen = setmetatable({}, { __mode = "k" })
+local deferred = setmetatable({}, { __mode = "k" })
+
+local function ReadableBar(p)
+    -- FlareUI compares its previous colour with the incoming one.
+    return canaccessallvalues(p.barR, p.barG, p.barB)
+end
 
 -- Run after the host has restored this plate's current name and colour.
 -- Track the widget, never profile data by reusable nameplate token.
@@ -53,6 +59,7 @@ local function PaintBar(p)
     if not Live(p) then return end
     seen[p] = true
     if not colours or p.nameOnly or not p.tdb or p.tdb.healthColor ~= "class" or p.threatRGB then return end
+    if not ReadableBar(p) then return end
     local tapped, connected = UnitIsTapDenied(p.unit), UnitIsConnected(p.unit)
     if not canaccessallvalues(tapped, connected) or tapped or not connected then return end
     if p.tdb.colorFocus and p.gamePlate == C_NamePlate.GetNamePlateForUnit("focus") then return end
@@ -64,20 +71,28 @@ local function Refresh(refreshBars)
     for p in pairs(seen) do
         if Live(p) then
             np.UpdateName(p)
-            if refreshBars and np.UpdateColor and np.BarColor then np.UpdateColor(p) end
+            if (refreshBars or deferred[p]) and np.UpdateColor and np.BarColor then
+                if ReadableBar(p) then
+                    deferred[p] = nil
+                    np.UpdateColor(p)
+                else
+                    deferred[p] = true
+                end
+            end
         else
             seen[p] = nil
+            deferred[p] = nil
         end
     end
 end
 
 local queued
 local function Queue()
-    if queued or not (names or colours) then return end
+    if queued or not (names or colours or next(deferred)) then return end
     queued = true
     C_Timer.After(0, function()
         queued = nil
-        if names or colours then Refresh(colours) end
+        if names or colours or next(deferred) then Refresh(colours) end
     end)
 end
 

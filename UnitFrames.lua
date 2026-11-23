@@ -91,7 +91,14 @@ local function StartUnitFrames(config, elements)
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
         TRP3_API.RegisterCallback(TRP3_Addon, event, Refresh)
     end
-    TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", Refresh)
+    TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", function()
+        -- A switch turned off in combat can still have a pending restore.
+        if ns.unitHealthActive then
+            if not ns.healthEnabled.player then ns.PaintHealth(_G.FlareUI_UF_Player, "player") end
+            if not ns.healthEnabled.target then ns.PaintHealth(_G.FlareUI_UF_Target, "target") end
+        end
+        Refresh()
+    end)
     Refresh()
 end
 

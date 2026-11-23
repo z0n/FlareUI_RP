@@ -36,12 +36,15 @@ end
 -- Group tiles use the same palette and tints, but have their own settings and
 -- colour state (a secure raid header can reassign its tile to another unit).
 function ns.ApplyHealth(frame, unit, db, s, enabled)
-    if not db or FlareUI.EditPreviewing() then return end
+    if not db or FlareUI.EditPreviewing() or (not s.applied and not (enabled and s.r)) then return end
     local uf = FlareUI.UnitFrames
+    -- FlareUI's restore helper branches on these same flags. If restricted,
+    -- leave the widget alone and keep s.applied for the next safe repaint.
+    local player, connected, tapped = UnitIsPlayer(unit), UnitIsConnected(unit), UnitIsTapDenied(unit)
+    if not canaccessallvalues(player, connected, tapped) then return end
     local mode = uf.HealthColorMode(db)
     if enabled and s.r and FlareUI.ClassColorsOn(db) and mode ~= "health" then
-        local player, connected, tapped = UnitIsPlayer(unit), UnitIsConnected(unit), UnitIsTapDenied(unit)
-        if canaccessallvalues(player, connected, tapped) and player and connected and not tapped
+        if player and connected and not tapped
             and canaccessallvalues(UnitNameUnmodified(unit)) and TRP3_NameUtil.GetQualifiedName(unit) == s.id then
             if mode == "off" then
                 frame.Health:SetStatusBarColor(s.r, s.g, s.b)

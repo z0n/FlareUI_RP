@@ -154,8 +154,8 @@ function ns.StartGroupFrames(config, elements)
     for _, event in ipairs({ "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
         TRP3_API.RegisterCallback(TRP3_Addon, event, QueueAll)
     end
-    for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED" }) do
-        TRP3_API.RegisterCallback(TRP3_API.GameEvents, event, QueueAll)
-    end
+    TRP3_API.RegisterCallback(TRP3_API.GameEvents, "GROUP_ROSTER_UPDATE", QueueAll)
+    -- Retry deferred restores even when all group options are now off.
+    TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", function() Refresh() end)
     Queue()
 end
