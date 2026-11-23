@@ -7,9 +7,11 @@ local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() retu
         SetTextColor = function(self, r) self.red = r end,
     } }
 FlareUI = { Nameplates = { LevelPrefix = function() return "12 " end, UpdateName = function(p)
-    p.name:SetText("12 " .. person); p.name:SetTextColor(0.5)
+    local stock = (p.levelFollow and "12 " or "") .. person
+    if p.nameSlot then p.name:SetText(stock) end
+    p.name:SetTextColor(0.5)
     if p.aboveName and p.aboveKind and p.aboveName:IsShown() then
-        p.aboveName:SetText(person)
+        p.aboveName:SetText(stock)
         p.aboveName:SetTextColor(p.name.red)
     end
 end, BarColor = function(p, r) assert(canaccessallvalues(p.barR, p.barG, p.barB)); p.fill = r end,
@@ -74,9 +76,10 @@ handlers.flareui_rp_plate_colours(nil, false); check("12 A", 0.5)
 handlers.flareui_rp_plate_names(nil, true); check("12 Aster Moonfall", 0.5)
 handlers.flareui_rp_plate_colours(nil, true)
 plate.nameOnly = false
-plate.aboveName = { SetText = plate.name.SetText, SetTextColor = plate.name.SetTextColor, IsShown = function() return true end }
+plate.aboveName = { SetText = plate.name.SetText, SetFormattedText = plate.name.SetFormattedText,
+    SetTextColor = plate.name.SetTextColor, IsShown = function() return true end }
 plate.aboveKind = "firstname"
-paint(plate); assert(plate.aboveName.text == "Aster" and plate.name.text == "12 Aster Moonfall")
+paint(plate); assert(plate.aboveName.text == "12 Aster" and plate.name.text == "12 Aster Moonfall")
 records.A[3] = 0.6
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
@@ -101,9 +104,14 @@ end
 plate.tdb.healthColor = "class"
 plate.nameSlot = nil
 plate.aboveKind = "fullname"
-paint(plate); assert(plate.aboveName.text == "Aster Moonfall")
-handlers.flareui_rp_plate_names(nil, false); assert(plate.aboveName.text == "A")
+paint(plate); assert(plate.aboveName.text == "12 Aster Moonfall" and plate.aboveName.red == 0.5)
+plate.levelFollow, plate.tdb.nameClassColor = false, true
+handlers.flareui_rp_plate_names(nil, false); assert(plate.aboveName.text == "A" and plate.aboveName.red == 0.6)
+person = "B"; paint(plate); assert(plate.aboveName.text == "B" and plate.aboveName.red == 0.5)
+person = "A"
 handlers.flareui_rp_plate_names(nil, true)
+assert(plate.aboveName.text == "Aster Moonfall" and plate.aboveName.red == 0.6)
+plate.levelFollow = true
 bar(plate); assert(plate.fill == 0.3)
 handlers.flareui_rp_plate_colours(nil, false); assert(plate.fill == 0.4)
 handlers.flareui_rp_plate_colours(nil, true); assert(plate.fill == 0.3)

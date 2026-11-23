@@ -5,9 +5,10 @@ function hooksecurefunc(owner, key, fn)
     owner[key] = function(...) local result = original(...); fn(...); return result end
 end
 function securecallfunction(fn, ...) return fn(...) end
-function canaccessvalue() return true end
+local secret = {}
+function canaccessvalue(value) return value ~= secret end
 function canaccessallvalues() return true end
-function UnitExists(u) return units[u] ~= nil end
+function UnitExists(u) return units[u] == secret and secret or units[u] ~= nil end
 function UnitIsPlayer() return true end
 function UnitIsConnected() return true end
 function UnitIsTapDenied() return false end
@@ -37,6 +38,7 @@ party.index, party.btFullName, FlareUI_Party1 = 1, false, party
 raid.flareTile, raid.ctx = true, { fontKey = "raid" }
 boss.ctx = { fontKey = "boss" }
 local pf = { SlotOn = function(f) return f.index ~= nil end, NameAboveDb = function(f) return f.db end }
+function pf.SlotStyle(f) return f.style or "plain" end
 FlareUI = { PartyFrames = pf, NameAbove = { SetName = function(f) f.NameAboveText:SetText(units[f.fuiUnit]) end,
         Get = function() return "middle", "fullname" end }, UnitDisplayName = UnitNameUnmodified,
     EditPreviewing = function() return editing end, ClassColorsOn = function(db) return db.classColor end,
@@ -58,6 +60,15 @@ end
 flush(); draw(party); draw(raid); draw(boss)
 assert(party.Name.text == "Aster" and party.NameAboveText.text == "Aster Moonfall" and party.Health.red == 0.8)
 assert(raid.Name.text == "B" and raid.Health.red == 0.5 and boss.Name.text == "A" and boss.Health.red == 0.5)
+party.style, party.btFullName = "partytile", true
+FlareUI.db.profile.unitframes.fullNames = false
+draw(party); assert(party.Name.text == "Aster")
+FlareUI.db.profile.unitframes.fullNames = true
+draw(party); assert(party.Name.text == "Aster Moonfall")
+units.party1 = secret
+local beforeRestricted = lookups
+draw(party); assert(lookups == beforeRestricted and party.Name.text == secret)
+units.party1 = "A"
 records.B = { first = "Birch", full = "Birch Winter", rgb = 0.2 }
 local tank = Tile("raid1")
 tank.flareTile, tank.ctx = true, raid.ctx

@@ -36,32 +36,30 @@ local function ClassName(p)
     return canaccessvalue(class) and class and C_ClassColor.GetClassColor(class)
 end
 
+local function SetName(label, name, prefix)
+    if not name then return end
+    if prefix then label:SetFormattedText("%s%s", prefix, name) else label:SetText(name) end
+end
+
 local function Paint(p)
     if not Live(p) then return end
     seen[p] = true
+    if not (names or colours) then return end
+    local above = p.aboveKind and p.aboveName and p.aboveName:IsShown()
+    if not (above or p.nameSlot) then return end
     local textColour = colours and ClassName(p)
-    -- 7.0.4 can show a separate name even when no bar text slot contains one.
-    local above = names and p.aboveKind and p.aboveName and p.aboveName:IsShown()
-    if not above and not (p.nameSlot and (names or textColour)) then return end
+    if not (names or textColour) then return end
     local profile = ns.Profile(p.unit)
     if not profile then return end
-    if above then
-        local name = ns.ProfileName(profile, p.aboveKind == "fullname")
-        if name then p.aboveName:SetText(name) end
-    end
-    if not p.nameSlot then return end
-    local name = names and ns.ProfileName(profile, p.nameFull)
-    local color = textColour and profile:GetCustomColorForDisplay()
-    if name then
+    if names then
         local prefix = p.levelFollow and np.LevelPrefix(p.unit)
-        if prefix then p.name:SetFormattedText("%s%s", prefix, name) else p.name:SetText(name) end
+        if p.nameSlot then SetName(p.name, ns.ProfileName(profile, p.nameFull), prefix) end
+        if above then SetName(p.aboveName, ns.ProfileName(profile, p.aboveKind == "fullname"), prefix) end
     end
+    local color = textColour and profile:GetCustomColorForDisplay()
     if color then
-        p.name:SetTextColor(color:GetRGB())
-        -- The host copies the bar name's colour to its above-plate label.
-        if p.aboveKind and p.aboveName and p.aboveName:IsShown() then
-            p.aboveName:SetTextColor(color:GetRGB())
-        end
+        if p.nameSlot then p.name:SetTextColor(color:GetRGB()) end
+        if above then p.aboveName:SetTextColor(color:GetRGB()) end
     end
 end
 

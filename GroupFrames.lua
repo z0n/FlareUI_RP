@@ -14,14 +14,14 @@ end
 
 local function Live(f)
     local unit = f.fuiUnit
-    if not FlareUI.EditPreviewing() and f:IsVisible() and canaccessvalue(unit) and unit and UnitExists(unit) then return unit end
+    if not FlareUI.EditPreviewing() and f:IsVisible() and canaccessvalue(unit) and unit and ns.DirectExists(unit) then return unit end
 end
 
 local function Names(f, unit, enabled, restore)
     local profile = enabled and ns.Profile(unit)
     if not profile and not restore then return end
     local full
-    if pf.SlotOn(f) then full = f.btFullName ~= false
+    if pf.SlotOn(f) and not (pf.SlotStyle and pf.SlotStyle(f) == "partytile") then full = f.btFullName ~= false
     else full = FlareUI.db.profile.unitframes.fullNames ~= false end
     local function Label(label, long)
         local name = profile and ns.ProfileName(profile, long)
