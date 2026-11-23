@@ -1,5 +1,9 @@
 package-as: FlareUI_RP
 
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - .github
   - AGENTS.md
