@@ -1,6 +1,4 @@
-# FlareUI RP 0.3.1
+# FlareUI RP 0.4.0
 
-- RP names above player nameplates now keep the level prefix when **Follow Name** is selected.
-- With **Colour Names by Class** enabled, a name shown only above the plate can now use the player’s RP colour even when **Show RP Names** is off. Party, raid and guild colours still take priority where FlareUI uses them.
-- Party frames in **Raid Style** now follow **Full Player Names** for the member name at the top of each tile.
-- Party and raid frames make fewer Total RP 3 lookups when refreshing names and health colours, and skip lookups when the game restricts access to the unit.
+- If RP health colours aren’t showing, open **Total RP 3 > Settings > FlareUI RP**. A hint identifies the FlareUI setting that’s blocking them and updates as you make changes.
+- Use the hint’s button to open the relevant FlareUI settings. A movable note keeps the instructions visible while you edit.
