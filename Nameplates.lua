@@ -121,7 +121,7 @@ function ns.StartNameplates(config, elements)
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "Show RP Names",
         help = "Show the RP name on or above the plate. FlareUI controls its position and name format." }
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Colours",
-        help = "Replace class colours on health fills and names, including Colour Names by Class on full plates. Party, raid and guild name colours keep priority." }
+        help = "Use RP colours instead of class colours on health bars and names. For names on full plates, enable FlareUI's Colour Names by Class. Party, raid and guild name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
