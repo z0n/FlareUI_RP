@@ -116,10 +116,13 @@ end
 TRP3_API.RegisterCallback(TRP3_Addon, "WORKFLOW_ON_LOADED", function()
     local config = TRP3_API.configuration
     local elements = { { inherit = "TRP3_ConfigParagraph",
-        title = "Enable Unit Frames or Nameplates in FlareUI first. RP names follow your First Name or Full Name setting. If a profile has no name or colour to use, FlareUI keeps its usual one.|n|nFor RP health bars, open Edit Mode, select the frame, and turn on Look > Class Colours. Names work even when Class Colours is off." } }
+        title = "RP names follow FlareUI's First Name or Full Name setting. RP colours replace class colours where FlareUI uses them. If a profile has no name or colour to use, FlareUI keeps its usual one." } }
     StartUnitFrames(config, elements)
     ns.StartGroupFrames(config, elements)
     ns.StartNameplates(config, elements)
+    local watchHints = ns.AddSetupHints(elements)
     -- TRP3 orders settings by menu ID, not by the displayed (localized) label.
-    config.registerConfigurationPage({ id = "main_config_flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements })
+    local page = { id = "main_config_flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements }
+    config.registerConfigurationPage(page)
+    if page.frame then watchHints(page.frame) end
 end)

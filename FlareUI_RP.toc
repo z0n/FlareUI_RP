@@ -8,4 +8,5 @@ Profile.lua
 UnitHealth.lua
 Nameplates.lua
 GroupFrames.lua
+SetupHints.lua
 UnitFrames.lua

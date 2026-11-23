@@ -1,0 +1,138 @@
+-- Exercise the settings page lifecycle with the same registered rows TRP3 uses.
+local ns = { directFrames = { target = "FlareUI_UF_Target" } }
+local values, combat, opened, hidden = {}, false
+local target = { classColor = false, healthColor = "health" }
+local party = { style = "raid", raid = { classColor = true }, classic = { classColor = false } }
+local plates = { friendlyPlayer = { plate = "name", healthColor = "reaction" },
+    enemyPlayer = { plate = "full", healthColor = "health" } }
+local profile = { unitframes = { units = { target = target }, party = party }, nameplates = {} }
+FlareUI_UF_Target, FlareUI_Party = {}, {}
+FlareUI = { db = { profile = profile }, ClassColorsOn = function(db) return db.classColor ~= false end,
+    UnitFrames = { HealthColorMode = function(db) return db.healthColor end },
+    Nameplates = { TypeDB = function(kind) return plates[kind] end },
+    Settings = { CanEditFrames = function() return not combat end,
+        EditFrame = function(_, frame, module) opened = { frame, module }; return true end },
+    SettingsPanel = { Open = function(_, key, tab) opened = { key, tab } end } }
+TRP3_MainFrame = { Hide = function() hidden = true end }
+TRP3_API = { configuration = { getValue = function(key) return values[key] end } }
+local function checkbox(key)
+    key = "flareui_rp_" .. key
+    values[key] = true
+    return { configKey = key }
+end
+local t, g, n = checkbox("target_health"), checkbox("party_health"), checkbox("plate_colours")
+local elements = { {}, t, g, n }
+assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
+local watchHints = ns.AddSetupHints(elements)
+local function noop() end
+local function widget()
+    return { ClearAllPoints = noop, SetPoint = noop, SetWordWrap = noop, SetWidth = noop,
+        SetText = function(self, text) self.text = text end, SetHeight = function(self, h) self.height = h end,
+        SetEnabled = function(self, enable) self.enabled = enable end,
+        Show = function(self) self.shown = true end, Hide = function(self) self.shown = false end,
+        IsVisible = function() return true end, GetStringHeight = function() return 20 end,
+        GetTextWidth = function() return 60 end, RegisterEvent = noop,
+        SetScript = function(self, key, fn) self[key] = fn end, HookScript = function(self, key, fn) self[key] = fn end }
+end
+local hints = {}
+for i, row in ipairs(elements) do
+    if row.elementInitializer then
+        local w = widget()
+        w.Title, w.Button, row.widget = widget(), widget(), w
+        row.elementInitializer(w)
+        hints[elements[i-1]] = row
+    end
+end
+local row, w = hints[t], hints[t].widget
+local note, body, close
+FlareUI.WINDOW_STYLE = { border = { 1, 1, 1 }, top = { 1, 1, 1, 1 }, bottom = { 0, 0, 0, 1 } }
+CreateColor = noop
+EditModeManagerFrame, FlareUI_SettingsPanel = widget(), widget()
+function CreateFrame(kind)
+    local f = widget()
+    if kind == "Button" then close = f; return f end
+    assert(not note, "reuse the pinned note")
+    note = f
+    for _, key in ipairs({ "SetFrameStrata", "SetClampedToScreen", "SetBackdrop", "SetBackdropBorderColor",
+        "SetMovable", "EnableMouse", "RegisterForDrag", "StartMoving", "StopMovingOrSizing" }) do f[key] = noop end
+    f.CreateTexture = function() return { SetPoint = noop, SetColorTexture = noop, SetGradient = noop } end
+    f.CreateFontString = function()
+        body = widget()
+        body.SetJustifyH, body.SetSpacing = noop, noop
+        body.SetWidth = function(self, width) self.wrapWidth = width end
+        body.GetStringHeight = function(self)
+            assert(self.wrapWidth and f.shown, "measure visible text at its actual wrap width")
+            return math.ceil(#self.text * 9 / self.wrapWidth) * 18
+        end
+        return body
+    end
+    return f
+end
+local page, tick = widget(), nil
+C_Timer = { NewTicker = function(_, fn)
+    assert(not tick)
+    tick = fn
+    return { Cancel = function() tick = nil end }
+end }
+watchHints(page)
+assert(w.Title.text:find("Class Colours") and w.Title.text:find("Tint Health") and w.Button.enabled)
+combat = true
+w.OnEvent()
+row.OnClick()
+assert(not opened and not hidden and not w.Button.enabled and not note)
+combat = false
+w.OnEvent()
+row.OnClick()
+assert(opened[1] == FlareUI_UF_Target and opened[2] == "uf" and hidden and not target.classColor)
+assert(note.shown and body.text:find("Tint Health"))
+local taller = note.height + 40
+body.GetStringHeight = function() return taller end
+note:OnDragStop()
+assert(note.height > taller, "after dragging, the frame must contain the wrapped body plus padding")
+EditModeManagerFrame:OnHide()
+assert(not note.shown)
+target.classColor, target.healthColor = true, "low"
+tick()
+assert(not w.Button.shown and w.height == 1)
+target.classColor = false
+tick()
+assert(w.Button.shown and w.Title.text:find("Class Colours"))
+page.OnHide()
+assert(not tick)
+page.OnShow()
+assert(tick)
+-- The parent was hidden without the usual page hide callback.
+page.IsVisible = function() return false end
+target.classColor = true
+tick()
+assert(not tick and w.Button.shown, "hidden page must cancel before refreshing hints")
+assert(not hints[g].widget.Button.shown)
+party.style = "classic"
+hints[g].widget.OnShow()
+assert(hints[g].widget.Button.shown)
+values[g.configKey] = false
+g.OnClick()
+assert(not hints[g].widget.Title.shown)
+local plate = hints[n]
+assert(plate.widget.Title.text:find("Enemy Player") and not plate.widget.Title.text:find("Friendly Player"))
+plate.OnClick()
+assert(opened[1] == "np" and opened[2] == "style")
+assert(note.shown and body.text:find("Enemy Player"))
+EditModeManagerFrame:OnHide()
+assert(note.shown)
+FlareUI_SettingsPanel:OnHide()
+assert(not note.shown)
+plate.OnClick()
+close:OnClick()
+assert(not note.shown)
+plates.enemyPlayer.healthColor = "class"
+plate.widget.OnShow()
+assert(not plate.widget.Button.shown)
+profile.nameplates.enabled = false
+local module = elements[3]
+module.widget.OnShow()
+assert(module.widget.Title.shown and not elements[2].widget.Title.shown)
+FlareUI.SettingsPanel = nil
+module.widget.OnShow()
+assert(not module.widget.Button.enabled)
+print("PASS: contextual setup hints, targeted shortcuts, combat guard and rechecks")

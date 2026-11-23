@@ -8,6 +8,8 @@ FlareUI RP displays Total RP 3 names and colours on FlareUI’s player, target, 
 2. Enable **Unit Frames**, **Nameplates**, or both in FlareUI.
 3. Open **Total RP 3 → Settings → FlareUI RP**. Options are on by default and can be changed independently without a reload.
 
+If a FlareUI setting prevents RP health colours, a hint points you to the setting to change.
+
 For manual installs from [GitHub Releases](https://github.com/z0n/FlareUI_RP/releases), download the **FlareUI_RP addon ZIP** under **Assets**, not GitHub’s automatic **Source code (zip)**. Extract it so `Interface/AddOns/FlareUI_RP/FlareUI_RP.toc` exists. If your addon manager supports GitHub sources and WoW: Forever, use `https://github.com/z0n/FlareUI_RP` as the source.
 
 **Unit frames:** Player, Target, Focus, Target of Target and Target of Focus share the **Show RP Names** switch. Each has its own RP health-colour switch. Enable **Look > Class Colours** on the corresponding FlareUI frame to use the player's profile colour. Low-health warnings and health gradients keep priority. RP names work independently and follow each label’s first/full-name choice. When the player’s identity is restricted or the unit is an NPC, FlareUI keeps its usual display.
