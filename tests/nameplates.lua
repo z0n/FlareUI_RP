@@ -41,6 +41,17 @@ end
 local records = { A = { "Aster", "Aster Moonfall", 0.8 }, Me = { guild = " NIGHT WATCH " } }
 local secret = {}
 local gameGuild
+local gameTitle
+function UnitPVPName() return gameTitle end
+function FlareUI.Nameplates.UpdateTitleLine(p)
+    if not p.npcTitle then return end
+    p.npcTitle.shown = p.nameOnly and p.tdb.showTitles and gameTitle and canaccessvalue(gameTitle)
+    if p.npcTitle.shown then p.npcTitle:SetText(gameTitle) end
+end
+function FlareUI.Nameplates.UpdateTitle(p)
+    FlareUI.Nameplates.UpdateTitleLine(p)
+    FlareUI.Nameplates.UpdateGuild(p)
+end
 function GetGuildInfo() return gameGuild end
 FlareUI.PALETTE = { bronze5 = { 0.85, 0.68, 0.47 } }
 FlareUI.Nameplates.UpdateGuild = function(p)
@@ -62,6 +73,7 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
     return { GetFirstName = function() return data[1] end, GetFullName = function() return data[2] end,
         GetLastName = function() return data[4] end,
         GetCustomGuildMembership = function() return { name = data.guild } end,
+        GetFullTitle = function() return data.title end,
         GetCustomColorForDisplay = function() if data[3] then return { GetRGB = function() return data[3], 0, 0 end } end end,
         GetCustomColor = function() if data[3] then return { GetRGB = function() return data[3] / 2, 0, 0 end } end end }
 end } }
@@ -225,6 +237,20 @@ plate.nameOnly = true; plate.tdb.guildColor = false; paint(plate); assert(plate.
 plate.tdb.guildColor = true
 handlers.flareui_rp_plate_guild_colours(nil, false); assert(plate.name.red == 0.5)
 handlers.flareui_rp_plate_guild_colours(nil, true)
+plate.npcTitle = { SetText = label.SetText, IsShown = label.IsShown, Show = label.Show, SetTextColor = label.SetTextColor }
+plate.tdb.showTitles, plate.tdb.showGuild = true, true
+records.B.title = "  Keeper of the Watch  "
+handlers.flareui_rp_plate_guilds(nil, true)
+local updateTitle = FlareUI.Nameplates.UpdateTitle
+updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
+handlers.flareui_rp_plate_titles(nil, true)
+assert(plate.npcTitle.text == "Keeper of the Watch" and label.anchor == plate.npcTitle)
+gameTitle = secret; updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
+gameTitle = "Corporal"; records.B.title = " "
+callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush(); assert(plate.npcTitle.text == "Corporal")
+records.B.title = "Keeper"; plate.tdb.showTitles = false; updateTitle(plate); assert(not plate.npcTitle.shown)
+plate.tdb.showTitles = true; updateTitle(plate); assert(plate.npcTitle.text == "Keeper")
+handlers.flareui_rp_plate_titles(nil, false); assert(plate.npcTitle.text == "Corporal")
 plate.gamePlate, plate.unit = nil, nil
 callbacks.REGISTER_PROFILE_DELETED(); queued()
 print("PASS: player plate names, display colour, independent settings, prefix, recycled plates and late updates")

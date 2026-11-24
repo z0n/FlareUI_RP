@@ -3,6 +3,7 @@
 - **RP names:** Show RP names on player, target, focus, target-of-target, target-of-focus, party and raid frames, and on floating player nameplates. RP names follow FlareUI’s **First Name**, **Last Name** or **Full Name** setting for each label.
 - **Profile colours:** Enable **Look > Class Colours** on a unit frame, or choose **Class & Reaction** for nameplate health bars. Health warnings, gradients and group name colours keep priority.
 - **RP guilds:** Enable **Show Guild Name** on friendly or enemy **Name Only** plates to show a profile’s custom guild, even for players without an in-game guild. Profiles without a custom guild keep the usual guild line.
+- **RP titles:** Opt in to **Use RP Titles** to show a profile’s **Full title** where FlareUI’s **Show Titles** is enabled on player nameplates.
 - **RP guildmates:** Enable **Colour RP Guild Members** in FlareUI RP (off by default) and **Colour Guild Members** on FlareUI’s friendly **Name Only** plates to colour matching RP guildmates’ names like in-game guildmates. The guild label is optional.
 - **TRP3 styling:** Give the TRP3 main window, toolbar and target bar a matching FlareUI appearance.
 

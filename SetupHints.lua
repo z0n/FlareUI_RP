@@ -57,20 +57,20 @@ local function VisibilityHint(np, kind)
     end
 end
 
-local function GuildLabelHint()
+local function LabelHint(key, feature, setting)
     local np = ActiveNameplates()
     if not np then return end
     local visibility
     for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
         local db = np.TypeDB(kind)
-        if db and db.plate == "name" and db.showGuild then
+        if db and db.plate == "name" and db[key] then
             local hint = VisibilityHint(np, kind)
             if not hint then return end
             visibility = visibility or hint
         end
     end
-    if visibility then return "For RP guild names: " .. visibility, "np", "visibility" end
-    return "For RP guild names, select Friendly Player or Enemy Player in Plate Setup. Under Style, enable Name Only Mode and Show Guild Name.", "np", "style"
+    if visibility then return "For " .. feature .. ": " .. visibility, "np", "visibility" end
+    return "For " .. feature .. ", select Friendly Player or Enemy Player in Plate Setup. Under Style, enable Name Only Mode and " .. setting .. ".", "np", "style"
 end
 
 local function GuildColourHint()
@@ -246,7 +246,9 @@ function ns.AddSetupHints(elements)
         elseif opt.configKey == "flareui_rp_plate_colours" then
             Hint(elements, i + 1, checks, PlateHint, opt)
         elseif opt.configKey == "flareui_rp_plate_guilds" then
-            Hint(elements, i + 1, checks, GuildLabelHint, opt)
+            Hint(elements, i + 1, checks, function() return LabelHint("showGuild", "RP guild names", "Show Guild Name") end, opt)
+        elseif opt.configKey == "flareui_rp_plate_titles" then
+            Hint(elements, i + 1, checks, function() return LabelHint("showTitles", "RP titles", "Show Titles") end, opt)
         elseif opt.configKey == "flareui_rp_plate_guild_colours" then
             Hint(elements, i + 1, checks, GuildColourHint, opt)
         end

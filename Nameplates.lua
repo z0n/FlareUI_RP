@@ -1,5 +1,5 @@
 local _, ns = ...
-local np, names, colours, guilds, guildColours
+local np, names, colours, guilds, guildColours, titles
 local seen = setmetatable({}, { __mode = "k" })
 
 -- Run after the host has restored this plate's current name and colour.
@@ -94,6 +94,23 @@ local function PaintBar(p)
     if r then np.BarColor(p, r, g, b) end
 end
 
+local function PaintTitle(p)
+    if not Live(p) then return end
+    seen[p] = true
+    local label = p.npcTitle
+    if not (titles and label and p.nameOnly and p.tdb and p.tdb.showTitles) then return end
+    if p.kind ~= "friendlyPlayer" and p.kind ~= "enemyPlayer" then return end
+    if not label:IsShown() and UnitPVPName and not canaccessvalue((UnitPVPName(p.unit))) then return end
+    local title = ns.ProfileTitle(ns.Profile(p.unit))
+    if not title then return end
+    label:SetText(title)
+    if not label:IsShown() then
+        local c = FlareUI.PALETTE.bronze5
+        label:SetTextColor(c[1], c[2], c[3], 1)
+        label:Show()
+    end
+end
+
 local function PaintGuild(p)
     if not Live(p) then return end
     seen[p] = true
@@ -122,14 +139,15 @@ local function NeedsRefresh(unit, ids)
     return not id or ids[id]
 end
 
-local function Refresh(refreshBars, ids)
+local function Refresh(refreshBars, ids, restoreTitles)
     for p in pairs(seen) do
         local unit = Live(p)
         if not unit then
             seen[p] = nil
         elseif NeedsRefresh(unit, ids) then
             np.UpdateName(p)
-            if np.UpdateGuild then np.UpdateGuild(p) end
+            if titles or restoreTitles then np.UpdateTitle(p)
+            elseif np.UpdateGuild then np.UpdateGuild(p) end
             if refreshBars and np.UpdateColor and np.BarColor then np.UpdateColor(p) end
         end
     end
@@ -137,7 +155,7 @@ end
 
 local queued
 local function Queue(id)
-    if not (names or colours or guilds or guildColours) then return end
+    if not (names or colours or guilds or guildColours or titles) then return end
     local scheduled = queued ~= nil
     if not id then queued = true
     elseif queued ~= true then
@@ -148,7 +166,7 @@ local function Queue(id)
     C_Timer.After(0, function()
         local batch = queued
         queued = nil
-        if names or colours or guilds or guildColours then Refresh(colours, batch ~= true and batch or nil) end
+        if names or colours or guilds or guildColours or titles then Refresh(colours, batch ~= true and batch or nil) end
     end)
 end
 
@@ -166,6 +184,16 @@ function ns.StartNameplates(config, elements)
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Name and Bar Colours",
         help = "Replace player class colours with profile colours. For health bars, choose Class & Reaction in FlareUI. For names, use Name Only or enable Colour Names by Class on full plates. Party, raid and guild name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
+    if np.UpdateTitleLine and np.UpdateTitle then
+        local key = "flareui_rp_plate_titles"
+        config.registerConfigKey(key, false)
+        titles = config.getValue(key)
+        config.registerHandler(key, function(_, on) titles = on; Refresh(false, nil, true) end)
+        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Use RP Titles",
+            help = "Use the profile's Full title on Name Only player plates with Show Titles enabled. An empty Full title keeps FlareUI's normal title." }
+        -- The host anchors the guild immediately after painting this title line.
+        hooksecurefunc(np, "UpdateTitleLine", PaintTitle)
+    end
     if np.UpdateGuild then
         local guildKey = "flareui_rp_plate_guilds"
         config.registerConfigKey(guildKey, true)

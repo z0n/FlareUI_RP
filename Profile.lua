@@ -20,13 +20,20 @@ function ns.ProfileColor(profile)
     if color then return color:GetRGB() end
 end
 
-function ns.ProfileGuild(profile)
-    local membership = profile and profile.GetCustomGuildMembership and profile:GetCustomGuildMembership()
-    local name = membership and membership.name
+local function Trimmed(name)
     if canaccessvalue(name) and type(name) == "string" then
         name = strtrim(name)
         if name ~= "" then return name end
     end
+end
+
+function ns.ProfileGuild(profile)
+    local membership = profile and profile.GetCustomGuildMembership and profile:GetCustomGuildMembership()
+    return Trimmed(membership and membership.name)
+end
+
+function ns.ProfileTitle(profile)
+    return Trimmed(profile and profile.GetFullTitle and profile:GetFullTitle())
 end
 
 function ns.SharesProfileGuild(profile)

@@ -22,7 +22,9 @@ local function checkbox(key)
 end
 local t, g, n = checkbox("target_health"), checkbox("party_health"), checkbox("plate_colours")
 local gl, gc = checkbox("plate_guilds"), checkbox("plate_guild_colours")
-local elements = { t, g, n, gl, gc }
+local titles = checkbox("plate_titles")
+values[titles.configKey] = false
+local elements = { t, g, n, gl, gc, titles }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
 local function noop() end
@@ -131,6 +133,11 @@ plates.enemyPlayer.healthColor = "class"
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
 local labelHint, colourHint = hints[gl].widget, hints[gc].widget
+local titleHint = hints[titles].widget
+assert(not titleHint.Title.shown)
+values[titles.configKey] = true; titles.OnClick()
+assert(titleHint.Title.shown and titleHint.Title.text:find("Show Titles"))
+plates.friendlyPlayer.showTitles = true; titleHint.OnShow(); assert(not titleHint.Title.shown)
 assert(labelHint.Title.text:find("Show Guild Name") and colourHint.Title.text:find("Colour Guild Members"))
 plates.enemyPlayer.plate, plates.enemyPlayer.showGuild = "name", true
 labelHint.OnShow(); assert(not labelHint.Button.shown and colourHint.Button.shown)
