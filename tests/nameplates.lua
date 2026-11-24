@@ -38,8 +38,17 @@ function hooksecurefunc(t, key, fn)
     local original = t[key]
     t[key] = function(p) original(p); fn(p) end
 end
-local records = { A = { "Aster", "Aster Moonfall", 0.8 } }
+local records = { A = { "Aster", "Aster Moonfall", 0.8 }, Me = { guild = " NIGHT WATCH " } }
 local secret = {}
+local gameGuild
+function GetGuildInfo() return gameGuild end
+FlareUI.PALETTE = { bronze5 = { 0.85, 0.68, 0.47 } }
+FlareUI.Nameplates.UpdateGuild = function(p)
+    if not p.guildName then return end
+    p.guildName.shown = p.nameOnly and p.tdb.showGuild and
+        (p.kind == "friendlyPlayer" or p.kind == "enemyPlayer") and gameGuild and canaccessvalue(gameGuild)
+    if p.guildName.shown then p.guildName:SetText("<" .. gameGuild .. ">") end
+end
 function canaccessvalue(value) return value ~= secret end
 function canaccessallvalues(...)
     for i = 1, select("#", ...) do if select(i, ...) == secret then return false end end
@@ -52,11 +61,15 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
     local data = records[id] or {}
     return { GetFirstName = function() return data[1] end, GetFullName = function() return data[2] end,
         GetLastName = function() return data[4] end,
+        GetCustomGuildMembership = function() return { name = data.guild } end,
         GetCustomColorForDisplay = function() if data[3] then return { GetRGB = function() return data[3], 0, 0 end } end end,
         GetCustomColor = function() if data[3] then return { GetRGB = function() return data[3] / 2, 0, 0 end } end end }
 end } }
+AddOn_TotalRP3.Player.GetCurrentUser = function() return AddOn_TotalRP3.Player.CreateFromCharacterID("Me") end
+function strcmputf8i(a, b) return a:lower() == b:lower() and 0 or 1 end
+function strtrim(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end
 TRP3_Addon = {}
-TRP3_API = { GameEvents = {}, RegisterCallback = function(_, key, fn) callbacks[key] = fn end }
+TRP3_API = { globals = { player_id = "Me" }, GameEvents = {}, RegisterCallback = function(_, key, fn) callbacks[key] = fn end }
 C_Timer = { After = function(_, fn) assert(not queued); queued = fn end }
 assert(loadfile("Profile.lua"))("FlareUI_RP", ns)
 assert(loadfile("Nameplates.lua"))("FlareUI_RP", ns)
@@ -169,6 +182,49 @@ records.B[3] = nil
 paint(plate); check("12 Birch Winter", 0.5) -- name-only profile
 records.B = nil
 paint(plate); check("12 B", 0.5) -- profile removed on the same visible unit
+local label = { SetText = plate.name.SetText, SetTextColor = plate.name.SetTextColor,
+    IsShown = function(self) return self.shown end, Show = function(self) self.shown = true end,
+    ClearAllPoints = function(self) self.anchor = nil end, SetPoint = function(self, _, anchor) self.anchor = anchor end }
+plate.guildName, plate.tdb.showGuild = label, true
+local paintGuild = FlareUI.Nameplates.UpdateGuild
+handlers.flareui_rp_plate_names(nil, false)
+handlers.flareui_rp_plate_colours(nil, false)
+records.B = { guild = "  Night Watch  " }
+callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
+assert(label.shown and label.text == "<Night Watch>" and label.anchor == plate.name)
+plate.npcTitle = { IsShown = function() return true end }
+plate.kind = "friendlyPlayer"; paintGuild(plate)
+assert(label.anchor == plate.npcTitle and label.red == 0.85)
+gameGuild = "Stock"; paintGuild(plate); assert(label.text == "<Night Watch>")
+handlers.flareui_rp_plate_guilds(nil, false); assert(label.text == "<Stock>")
+handlers.flareui_rp_plate_guilds(nil, true)
+records.B.guild = string.rep(" ", 8000); paintGuild(plate); assert(label.text == "<Stock>")
+records.B.guild = "Night Watch"
+restricted = true; paintGuild(plate); assert(label.text == "<Stock>")
+restricted = false
+person = "A"; paintGuild(plate); assert(label.text == "<Stock>")
+person = "B"; gameGuild = secret; paintGuild(plate); assert(not label.shown)
+gameGuild = nil; plate.tdb.showGuild = false; paintGuild(plate); assert(not label.shown)
+plate.tdb.showGuild = true; plate.nameOnly = false; paintGuild(plate); assert(not label.shown)
+plate.nameOnly = true; plate.kind = "friendlyNpc"; paintGuild(plate); assert(not label.shown)
+handlers.flareui_rp_plate_guilds(nil, false)
+plate.kind, plate.tdb.guildColor, plate.tdb.groupColor, plate.tdb.showGuild = "friendlyPlayer", true, false, false
+ChatTypeInfo = { GUILD = { r = 0.1, g = 0.9, b = 0.2 } }
+paint(plate); assert(plate.name.red == 0.5, "RP guildmate colour is opt-in")
+handlers.flareui_rp_plate_guild_colours(nil, true)
+paint(plate); assert(plate.name.red == 0.1 and plate.name.green == 0.9 and not label.shown)
+records.Me.guild = "Other"; callbacks.REGISTER_DATA_UPDATED(nil, "Me"); flush()
+assert(plate.name.red == 0.5, "changing own guild restores other plates")
+records.Me.guild = "Night Watch"; callbacks.REGISTER_DATA_UPDATED(nil, "Me"); flush()
+assert(plate.name.red == 0.1)
+guild = secret; paint(plate); assert(plate.name.red == 0.5)
+guild = false; plate.tdb.groupColor = true; paint(plate); assert(plate.name.red == 0.5)
+plate.tdb.groupColor = false; plate.kind = "enemyPlayer"; paint(plate); assert(plate.name.red == 0.5)
+plate.kind = "friendlyPlayer"; plate.nameOnly = false; paint(plate); assert(plate.name.red == 0.5)
+plate.nameOnly = true; plate.tdb.guildColor = false; paint(plate); assert(plate.name.red == 0.5)
+plate.tdb.guildColor = true
+handlers.flareui_rp_plate_guild_colours(nil, false); assert(plate.name.red == 0.5)
+handlers.flareui_rp_plate_guild_colours(nil, true)
 plate.gamePlate, plate.unit = nil, nil
 callbacks.REGISTER_PROFILE_DELETED(); queued()
 print("PASS: player plate names, display colour, independent settings, prefix, recycled plates and late updates")

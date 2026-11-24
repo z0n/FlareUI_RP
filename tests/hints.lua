@@ -21,7 +21,8 @@ local function checkbox(key)
     return { configKey = key }
 end
 local t, g, n = checkbox("target_health"), checkbox("party_health"), checkbox("plate_colours")
-local elements = { t, g, n }
+local gl, gc = checkbox("plate_guilds"), checkbox("plate_guild_colours")
+local elements = { t, g, n, gl, gc }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
 local function noop() end
@@ -129,6 +130,37 @@ assert(not note.shown)
 plates.enemyPlayer.healthColor = "class"
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
+local labelHint, colourHint = hints[gl].widget, hints[gc].widget
+assert(labelHint.Title.text:find("Show Guild Name") and colourHint.Title.text:find("Colour Guild Members"))
+plates.enemyPlayer.plate, plates.enemyPlayer.showGuild = "name", true
+labelHint.OnShow(); assert(not labelHint.Button.shown and colourHint.Button.shown)
+plates.friendlyPlayer.guildColor = true
+colourHint.OnShow(); assert(not colourHint.Button.shown)
+local held, picks, enemies = nil, "010", false
+FlareUI.Nameplates.FriendlyHeld = function() return held end
+FlareUI.Nameplates.FriendlyPicks = function() return picks end
+function GetCVarBool(key) assert(key == "nameplateShowEnemies"); return enemies end
+plates.friendlyPlayer.showGuild = true
+labelHint.OnShow(); colourHint.OnShow()
+assert(labelHint.Title.shown and colourHint.Title.shown and colourHint.Title.text:find("Friendly Types"))
+hints[gc].OnClick(); assert(opened[1] == "np" and opened[2] == "visibility")
+picks, held = "000", "100"
+labelHint.OnShow(); colourHint.OnShow()
+assert(not labelHint.Button.shown and not colourHint.Button.shown)
+held = "010"
+profile.nameplates.enemyInCombat = true
+labelHint.OnShow(); colourHint.OnShow()
+assert(not labelHint.Button.shown and colourHint.Button.shown)
+profile.nameplates.enemyPlayers = false
+plates.friendlyPlayer.showGuild = false
+labelHint.OnShow(); assert(labelHint.Title.shown and labelHint.Title.text:find("Enemy Types"))
+profile.nameplates.enemyInCombat, profile.nameplates.enemyPlayers = false, true
+labelHint.OnShow(); assert(labelHint.Title.shown and labelHint.Title.text:find("Show Enemy Plates"))
+enemies = true
+labelHint.OnShow(); assert(not labelHint.Button.shown)
+plates.friendlyPlayer.plate = "bar"
+colourHint.OnShow(); assert(colourHint.Button.shown)
+values[gc.configKey] = false; gc.OnClick(); assert(not colourHint.Button.shown)
 profile.nameplates.enabled = false
 local module = elements[2]
 module.widget.OnShow()

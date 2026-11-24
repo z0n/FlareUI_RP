@@ -14,6 +14,9 @@ RP names follow each label’s **First Name**, **Last Name** or **Full Name** se
 
 - **Unit frames:** Enable **Look > Class Colours** on the player, target, focus, target of target or target of focus frame to see RP health colours. For party and raid, select the corresponding frame in Edit Mode. Health warnings and gradients keep priority.
 - **Player nameplates:** Choose **Class & Reaction** for RP health colours. RP colours also apply to class-coloured names in **Name Only** mode or with **Colour Names by Class** enabled. Party, raid and guild name colours keep priority. **Names Above Plate** has its own name format.
+- **RP guilds:** Add the **Guild name** field to your TRP3 profile’s Characteristics. In FlareUI, enable **Show Guild Name** for friendly or enemy **Name Only** plates separately. The profile guild appears beneath the title or name, even without an in-game guild. If the field is empty, or you turn off **Use RP Guild Names** in FlareUI RP, the normal guild line is used.
+
+**Colour RP Guild Members** is off by default. Enable it to extend FlareUI’s **Colour Guild Members** on friendly **Name Only** plates. Players whose TRP3 guild matches yours get the same name colour as in-game guildmates, even with **Show Guild Name** off. Party and raid colours still take priority.
 
 ## TRP3 appearance
 

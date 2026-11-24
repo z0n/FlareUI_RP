@@ -1,5 +1,5 @@
 local _, ns = ...
-local np, names, colours
+local np, names, colours, guilds, guildColours
 local seen = setmetatable({}, { __mode = "k" })
 
 -- Run after the host has restored this plate's current name and colour.
@@ -10,7 +10,7 @@ end
 
 -- Use the reason for FlareUI's colour, not its RGB: class and group palettes
 -- can have identical values. An unset raid option inherits the party option.
-local function ClassName(p)
+local function CanRecolourName(p)
     local db = p.tdb
     if not db or not (p.nameOnly or db.nameClassColor) then return false end
     local member
@@ -26,8 +26,7 @@ local function ClassName(p)
         local guild = UnitIsInMyGuild(p.unit)
         if not canaccessvalue(guild) or guild then return false end
     end
-    local _, class = UnitClass(p.unit)
-    return canaccessvalue(class) and class and C_ClassColor.GetClassColor(class)
+    return true
 end
 
 local function SetName(label, name, prefix)
@@ -38,11 +37,12 @@ end
 local function Paint(p)
     if not Live(p) then return end
     seen[p] = true
-    if not (names or colours) then return end
+    if not (names or colours or guildColours) then return end
     local above = p.aboveKind and p.aboveName and p.aboveName:IsShown()
     if not (above or p.nameSlot) then return end
-    local textColour = colours and ClassName(p)
-    if not (names or textColour) then return end
+    local checkGuild = guildColours and p.kind == "friendlyPlayer" and p.nameOnly and p.tdb and p.tdb.guildColor and UnitIsInMyGuild
+    local canColour = (colours or checkGuild) and CanRecolourName(p)
+    if not (names or canColour) then return end
     local profile = ns.Profile(p.unit)
     if not profile then return end
     if names then
@@ -50,7 +50,18 @@ local function Paint(p)
         if p.nameSlot then SetName(p.name, ns.ProfileName(profile, p.nameFull), prefix) end
         if above then SetName(p.aboveName, ns.ProfileName(profile, ns.NameFormat(p.aboveKind)), prefix) end
     end
-    local color = textColour and profile:GetCustomColorForDisplay()
+    if not canColour then return end
+    if checkGuild and ns.SharesProfileGuild(profile) then
+        local g = ChatTypeInfo and ChatTypeInfo.GUILD
+        local r, green, b = g and g.r or 0.25, g and g.g or 1, g and g.b or 0.25
+        if p.nameSlot then p.name:SetTextColor(r, green, b) end
+        if above then p.aboveName:SetTextColor(r, green, b) end
+        return
+    end
+    if not colours then return end
+    local _, class = UnitClass(p.unit)
+    if not (canaccessvalue(class) and class and C_ClassColor.GetClassColor(class)) then return end
+    local color = profile:GetCustomColorForDisplay()
     if color then
         local r, g, b = color:GetRGB()
         if above then p.aboveName:SetTextColor(r, g, b) end
@@ -83,6 +94,26 @@ local function PaintBar(p)
     if r then np.BarColor(p, r, g, b) end
 end
 
+local function PaintGuild(p)
+    if not Live(p) then return end
+    seen[p] = true
+    local label = p.guildName
+    if not (guilds and label and p.nameOnly and p.tdb and p.tdb.showGuild) then return end
+    if p.kind ~= "friendlyPlayer" and p.kind ~= "enemyPlayer" then return end
+    -- Stock hides both absent and restricted guilds. Only fill the former.
+    if not label:IsShown() and not canaccessvalue((GetGuildInfo(p.unit))) then return end
+    local guild = ns.ProfileGuild(ns.Profile(p.unit))
+    if not guild then return end
+    label:SetText("<" .. guild .. ">")
+    if not label:IsShown() then
+        local c = FlareUI.PALETTE.bronze5
+        label:SetTextColor(c[1], c[2], c[3], 1)
+        label:ClearAllPoints()
+        label:SetPoint("TOP", (p.npcTitle and p.npcTitle:IsShown()) and p.npcTitle or p.name, "BOTTOM", 0, -1)
+        label:Show()
+    end
+end
+
 local function NeedsRefresh(unit, ids)
     if not ids then return true end
     -- Resolve at flush time: a plate may have changed units since the event.
@@ -98,6 +129,7 @@ local function Refresh(refreshBars, ids)
             seen[p] = nil
         elseif NeedsRefresh(unit, ids) then
             np.UpdateName(p)
+            if np.UpdateGuild then np.UpdateGuild(p) end
             if refreshBars and np.UpdateColor and np.BarColor then np.UpdateColor(p) end
         end
     end
@@ -105,7 +137,7 @@ end
 
 local queued
 local function Queue(id)
-    if not (names or colours) then return end
+    if not (names or colours or guilds or guildColours) then return end
     local scheduled = queued ~= nil
     if not id then queued = true
     elseif queued ~= true then
@@ -116,7 +148,7 @@ local function Queue(id)
     C_Timer.After(0, function()
         local batch = queued
         queued = nil
-        if names or colours then Refresh(colours, batch ~= true and batch or nil) end
+        if names or colours or guilds or guildColours then Refresh(colours, batch ~= true and batch or nil) end
     end)
 end
 
@@ -134,9 +166,26 @@ function ns.StartNameplates(config, elements)
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Name and Bar Colours",
         help = "Replace player class colours with profile colours. For health bars, choose Class & Reaction in FlareUI. For names, use Name Only or enable Colour Names by Class on full plates. Party, raid and guild name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
+    if np.UpdateGuild then
+        local guildKey = "flareui_rp_plate_guilds"
+        config.registerConfigKey(guildKey, true)
+        guilds = config.getValue(guildKey)
+        config.registerHandler(guildKey, function(_, on) guilds = on; Refresh(false) end)
+        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = guildKey, title = "Use RP Guild Names",
+            help = "Show the profile's Guild name on Name Only player plates when Show Guild Name is enabled in FlareUI. Without an RP guild, keep the normal guild line." }
+        hooksecurefunc(np, "UpdateGuild", PaintGuild)
+    end
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
+    local memberKey = "flareui_rp_plate_guild_colours"
+    config.registerConfigKey(memberKey, false)
+    guildColours = config.getValue(memberKey)
+    config.registerHandler(memberKey, function(_, on) guildColours = on; Refresh(false) end)
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = memberKey, title = "Colour RP Guild Members",
+        help = "Extend FlareUI's Colour Guild Members to friendly players whose RP guild matches yours. Party and raid colours keep priority." }
     TRP3_API.RegisterCallback(TRP3_Addon, "REGISTER_DATA_UPDATED", function(_, id)
-        if canaccessvalue(id) and type(id) == "string" and id ~= "" then Queue(id) else Queue() end
+        if not canaccessvalue(id) or type(id) ~= "string" or id == "" then Queue()
+        elseif guildColours and TRP3_API.globals and id == TRP3_API.globals.player_id then Queue()
+        else Queue(id) end
     end)
     local function QueueAll() Queue() end
     for _, event in ipairs({ "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do

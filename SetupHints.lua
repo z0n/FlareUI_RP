@@ -35,9 +35,58 @@ local function FrameHint(unit)
     return "In Edit Mode, select " .. label .. " and " .. fix .. " to use RP health colours.", "edit", unit
 end
 
-local function PlateHint()
+local function ActiveNameplates()
     local p, np = Profile(), FlareUI.Nameplates
-    if not (p and p.nameplates and p.nameplates.enabled ~= false and np and np.TypeDB) or np.standDown then return end
+    if p and p.nameplates and p.nameplates.enabled ~= false and np and np.TypeDB and not np.standDown then return np end
+end
+
+-- Use the configured visibility, not the temporary out-of-combat CVars.
+local function VisibilityHint(np, kind)
+    if kind == "friendlyPlayer" then
+        local picks = (np.FriendlyHeld and np.FriendlyHeld()) or (np.FriendlyPicks and np.FriendlyPicks())
+        if picks and picks:sub(1, 1) ~= "1" then
+            return "In Visibility, enable Players under Friendly Types."
+        end
+    else
+        local db = Profile().nameplates
+        if not db.enemyInCombat and GetCVarBool and not GetCVarBool("nameplateShowEnemies") then
+            return "In Visibility, set Show Enemy Plates to Always or Only in Combat."
+        elseif db.enemyPlayers == false then
+            return "In Visibility, enable Players under Enemy Types."
+        end
+    end
+end
+
+local function GuildLabelHint()
+    local np = ActiveNameplates()
+    if not np then return end
+    local visibility
+    for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
+        local db = np.TypeDB(kind)
+        if db and db.plate == "name" and db.showGuild then
+            local hint = VisibilityHint(np, kind)
+            if not hint then return end
+            visibility = visibility or hint
+        end
+    end
+    if visibility then return "For RP guild names: " .. visibility, "np", "visibility" end
+    return "For RP guild names, select Friendly Player or Enemy Player in Plate Setup. Under Style, enable Name Only Mode and Show Guild Name.", "np", "style"
+end
+
+local function GuildColourHint()
+    local np = ActiveNameplates()
+    local db = np and np.TypeDB("friendlyPlayer")
+    if not db then return end
+    if db.plate ~= "name" or not db.guildColor then
+        return "For RP guildmate colours, select Friendly Player in Plate Setup. Under Style, enable Name Only Mode and Colour Guild Members.", "np", "style"
+    end
+    local hint = VisibilityHint(np, "friendlyPlayer")
+    if hint then return "For RP guildmate colours: " .. hint, "np", "visibility" end
+end
+
+local function PlateHint()
+    local np = ActiveNameplates()
+    if not np then return end
     local blocked = {}
     for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
         local db = np.TypeDB(kind)
@@ -196,6 +245,10 @@ function ns.AddSetupHints(elements)
             Hint(elements, i + 1, checks, function() return FrameHint(unit) end, opt)
         elseif opt.configKey == "flareui_rp_plate_colours" then
             Hint(elements, i + 1, checks, PlateHint, opt)
+        elseif opt.configKey == "flareui_rp_plate_guilds" then
+            Hint(elements, i + 1, checks, GuildLabelHint, opt)
+        elseif opt.configKey == "flareui_rp_plate_guild_colours" then
+            Hint(elements, i + 1, checks, GuildColourHint, opt)
         end
     end
     Hint(elements, 1, checks, function() return ModuleHint("nameplates", "The Nameplates module") end)

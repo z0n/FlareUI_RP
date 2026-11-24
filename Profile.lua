@@ -20,6 +20,22 @@ function ns.ProfileColor(profile)
     if color then return color:GetRGB() end
 end
 
+function ns.ProfileGuild(profile)
+    local membership = profile and profile.GetCustomGuildMembership and profile:GetCustomGuildMembership()
+    local name = membership and membership.name
+    if canaccessvalue(name) and type(name) == "string" then
+        name = strtrim(name)
+        if name ~= "" then return name end
+    end
+end
+
+function ns.SharesProfileGuild(profile)
+    local guild = ns.ProfileGuild(profile)
+    if not guild then return false end
+    local own = ns.ProfileGuild(AddOn_TotalRP3.Player.GetCurrentUser())
+    return own and strcmputf8i(own, guild) == 0
+end
+
 -- Match FlareUI's UnitDisplayName argument, including the surname-only pick.
 function ns.NameFormat(pick)
     return pick == "lastname" and "lastname" or pick == "fullname"
