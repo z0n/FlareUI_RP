@@ -59,7 +59,7 @@ local function StartUnitFrames(config, elements)
         and FlareUI.UnitFrames.ShowsFullName and FlareUI.UnitDisplayName) then return end
     hooksecurefunc(FlareUI.NameAbove, "SetName", function(frame, settings) Paint(frame, settings) end)
     ns.StartUnitHealth()
-    local namesKey, healthKey = "flareui_rp_unit_names", "flareui_rp_target_health"
+    local namesKey = "flareui_rp_unit_names"
     -- Preserve the standalone addon's previous behaviour on first install/update.
     config.registerConfigKey(namesKey, true)
     ns.namesEnabled = config.getValue(namesKey)
@@ -79,23 +79,16 @@ local function StartUnitFrames(config, elements)
             ns.PaintHealth(frame, unit)
         end)
     end
-    local playerKey = "flareui_rp_player_health"
-    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Unit Frames" }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = namesKey, title = "Show RP Names",
-        help = "Use profile names on Player, Target, Focus, Target of Target and Target of Focus." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = namesKey, title = "Use RP Names",
+        help = "Use RP names on Player, Target, Focus, Target of Target and Target of Focus. FlareUI still controls which names appear and their format." }
     if ns.unitHealthActive then
-        HealthSetting(playerKey, "player")
-        HealthSetting(healthKey, "target")
-        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = playerKey, title = "Colour My Health Bar",
-            help = "Use your profile colour on your own health bar. Low-health warnings and health gradients keep priority." }
-        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = healthKey, title = "Colour My Target's Health Bar",
-            help = "Use the targeted player's profile colour. NPC health bars keep their normal colours." }
-        local labels = { focus = "Focus", targettarget = "Target of Target", focustarget = "Target of Focus" }
-        for _, unit in ipairs({ "focus", "targettarget", "focustarget" }) do
+        elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "RP Health Bar Colours" }
+        local labels = { player = "Player", target = "Target", focus = "Focus", targettarget = "Target of Target", focustarget = "Target of Focus" }
+        for _, unit in ipairs({ "player", "target", "focus", "targettarget", "focustarget" }) do
             local key = "flareui_rp_" .. unit .. "_health"
             HealthSetting(key, unit)
-            elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Colour " .. labels[unit] .. " Health Bar",
-                help = "Replace this frame's class colour when the player has a profile colour." }
+            elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = labels[unit],
+                help = "On the " .. labels[unit] .. " frame, use the player's profile colour when the health bar would show their class colour. Low-health warnings and gradients keep priority." }
         end
     end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
@@ -113,17 +106,78 @@ local function StartUnitFrames(config, elements)
     Refresh()
 end
 
+-- TRP3 builds the controls once. Only the section headings need a new top
+-- anchor when a section closes; controls retain their native row spacing.
+local function SettingsSections(config, elements)
+    local sections = {}
+    local function Layout()
+        local previous, section
+        for _, row in ipairs(elements) do
+            local widget = row.widget
+            if sections[row] then
+                section = sections[row]
+                widget:SetPoint("TOP", previous, "BOTTOM")
+                section.chevron:SetRotation(section.open and 0 or math.pi / 2)
+                previous = widget
+            elseif section then
+                widget:SetShown(section.open)
+                if section.open then previous = widget end
+            else
+                previous = widget
+            end
+        end
+    end
+    local function Add(title, start)
+        local rows = {}
+        start(config, rows)
+        if #rows == 0 then return end
+        local section = { open = false }
+        local header = { inherit = "TRP3_ConfigH1", frameType = "Button", title = title }
+        header.elementData = true
+        header.elementInitializer = function(button)
+            if not section.chevron then
+                local arrow = button:CreateTexture(nil, "OVERLAY")
+                arrow:SetTexture("Interface\\AddOns\\FlareUI\\Media\\Panel\\Chevron.tga")
+                arrow:SetSize(14, 14)
+                arrow:SetPoint("LEFT", button, "LEFT")
+                arrow:SetVertexColor(1, 0.82, 0)
+                button.Title:SetPoint("LEFT", arrow, "RIGHT", 5, 0)
+                section.chevron = arrow
+            end
+            -- ConfigH1's title handles mouse events for its truncation tooltip.
+            -- Let the full-width button receive clicks and hover over the text too.
+            button.Title:EnableMouse(false)
+            button:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+            button:SetScript("OnClick", function()
+                section.open = not section.open
+                Layout()
+            end)
+        end
+        sections[header] = section
+        elements[#elements + 1] = header
+        for _, row in ipairs(rows) do
+            -- Start the content beneath the title, past the 14-unit chevron and its gap.
+            row.marginLeft = 5 + 14 + 5
+            elements[#elements + 1] = row
+        end
+    end
+    Add("Player, Target & Focus", StartUnitFrames)
+    Add("Party & Raid", ns.StartGroupFrames)
+    Add("Player Nameplates", ns.StartNameplates)
+    Add("TRP3 Bar Appearance", ns.StartToolbar)
+    local watchHints = ns.AddSetupHints(elements)
+    return function(frame)
+        Layout()
+        watchHints(frame)
+    end
+end
+
 TRP3_API.RegisterCallback(TRP3_Addon, "WORKFLOW_ON_LOADED", function()
     local config = TRP3_API.configuration
-    local elements = { { inherit = "TRP3_ConfigParagraph",
-        title = "RP names follow FlareUI's First Name, Last Name or Full Name setting. RP colours replace class colours where FlareUI uses them. If a profile has no name or colour to use, FlareUI keeps its usual one." } }
-    StartUnitFrames(config, elements)
-    ns.StartGroupFrames(config, elements)
-    ns.StartNameplates(config, elements)
-    ns.StartToolbar(config, elements)
-    local watchHints = ns.AddSetupHints(elements)
+    local elements = {}
+    local attach = SettingsSections(config, elements)
     -- TRP3 orders settings by menu ID, not by the displayed (localized) label.
     local page = { id = "main_config_flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements }
     config.registerConfigurationPage(page)
-    if page.frame then watchHints(page.frame) end
+    if page.frame then attach(page.frame) end
 end)

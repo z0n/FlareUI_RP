@@ -142,13 +142,10 @@ function ns.StartNameplates(config, elements)
     names, colours = config.getValue(nameKey), config.getValue(colourKey)
     config.registerHandler(nameKey, function(_, on) names = on; Refresh(false) end)
     config.registerHandler(colourKey, function(_, on) colours = on; Refresh(true) end)
-    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Floating Nameplates" }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigParagraph",
-        title = "These are the names and bars above players in the world. To colour their bars, choose a player plate in FlareUI > Nameplates, then Style > Look > Colour By > Class & Reaction." }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "Show RP Names",
-        help = "Show the RP name on or above the plate. FlareUI controls its position and name format." }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Colours",
-        help = "Use RP colours instead of class colours on health bars and names. For names on full plates, enable FlareUI's Colour Names by Class. Party, raid and guild name colours keep priority." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "Use RP Names",
+        help = "Use a player's RP name where FlareUI shows their name on or above the plate. Each label keeps its own name format." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Name and Bar Colours",
+        help = "Replace player class colours with profile colours. For health bars, choose Class & Reaction in FlareUI. For names, use Name Only or enable Colour Names by Class on full plates. Party, raid and guild name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
     TRP3_API.RegisterCallback(TRP3_Addon, "REGISTER_DATA_UPDATED", function(_, id)

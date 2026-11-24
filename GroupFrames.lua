@@ -135,9 +135,9 @@ function ns.StartGroupFrames(config, elements)
     for _, kind in ipairs({ "party", "raid" }) do
         local label = kind == "party" and "Party" or "Raid"
         elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = label .. " Frames" }
-        Option(kind, "names", "Show RP Names", "Use each member's RP name where FlareUI normally shows their character name.")
+        Option(kind, "names", "Use RP Names", "Use each member's RP name where FlareUI shows their character name, on or above the frame.")
         if uf and uf.HealthColorMode and uf.HealthBarColor and FlareUI.ClassColorsOn then
-            Option(kind, "health", "Colour Member Health Bars", "Use each member's profile colour instead of their class colour. Health warnings keep priority.")
+            Option(kind, "health", "Use RP Health Bar Colours", "Use each member's profile colour when their bar would show a class colour. Low-health warnings and gradients keep priority.")
         end
     end
     hooksecurefunc(pf, "SlotOn", Discover)

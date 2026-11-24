@@ -21,7 +21,7 @@ local function checkbox(key)
     return { configKey = key }
 end
 local t, g, n = checkbox("target_health"), checkbox("party_health"), checkbox("plate_colours")
-local elements = { {}, t, g, n }
+local elements = { t, g, n }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
 local function noop() end
@@ -40,7 +40,8 @@ for i, row in ipairs(elements) do
         local w = widget()
         w.Title, w.Button, row.widget = widget(), widget(), w
         row.elementInitializer(w)
-        hints[elements[i-1]] = row
+        local option = elements[i-1]
+        if option and option.configKey then hints[option] = row end
     end
 end
 local row, w = hints[t], hints[t].widget
@@ -129,9 +130,9 @@ plates.enemyPlayer.healthColor = "class"
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
 profile.nameplates.enabled = false
-local module = elements[3]
+local module = elements[2]
 module.widget.OnShow()
-assert(module.widget.Title.shown and not elements[2].widget.Title.shown)
+assert(module.widget.Title.shown and not elements[1].widget.Title.shown)
 FlareUI.SettingsPanel = nil
 module.widget.OnShow()
 assert(not module.widget.Button.enabled)

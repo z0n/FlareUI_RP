@@ -122,7 +122,7 @@ end
 -- TRP3 builds the page once and anchors each row to its predecessor. Collapse
 -- the unused row but keep its frame shown so OnShow can recheck it next visit.
 local function Hint(elements, index, checks, diagnose, option)
-    local row = { inherit = "TRP3_ConfigButton" }
+    local row = { inherit = "TRP3_ConfigButton", marginLeft = option and option.marginLeft }
     local function State()
         if not option or TRP3_API.configuration.getValue(option.configKey) then return diagnose() end
     end
@@ -198,8 +198,8 @@ function ns.AddSetupHints(elements)
             Hint(elements, i + 1, checks, PlateHint, opt)
         end
     end
-    Hint(elements, 2, checks, function() return ModuleHint("nameplates", "The Nameplates module") end)
-    Hint(elements, 2, checks, function() return ModuleHint("unitframes", "The Unit Frames module") end)
+    Hint(elements, 1, checks, function() return ModuleHint("nameplates", "The Nameplates module") end)
+    Hint(elements, 1, checks, function() return ModuleHint("unitframes", "The Unit Frames module") end)
 
     -- FlareUI's panel and Edit Mode don't share a setting-change callback.
     -- Use one slow ticker for the open page; unchanged hints need no layout.

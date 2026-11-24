@@ -90,7 +90,7 @@ end
 local function StartBar(config, elements, toolbar, target)
     local key = target and "flareui_rp_targetbar_skin" or "flareui_rp_toolbar_borders"
     local windowKey = target and "flareui_rp_targetbar_window_style" or "flareui_rp_toolbar_window_border"
-    local label = target and "Total RP 3 Target Bar" or "Total RP 3 Toolbar"
+    local label = target and "Target Bar & At First Glance" or "Toolbar"
     local media = LibStub and LibStub("LibSharedMedia-3.0", true)
     local file = media and media:Fetch("border", "FlareUI Frames", true)
     if not file then return end
@@ -271,11 +271,13 @@ local function StartBar(config, elements, toolbar, target)
         RefreshWindow()
     end)
     elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = label }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Skin " .. label,
-        help = "Use FlareUI borders on the window, title and buttons." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Use FlareUI Styling",
+        help = target and "Apply FlareUI borders to the target bar, its buttons and the At First Glance panel and slots. Turn off to restore TRP3's appearance."
+            or "Apply FlareUI borders to the toolbar window and buttons. TRP3 still controls their size, layout and visibility." }
     elements[#elements + 1] = { inherit = "TRP3_ConfigDropDown", configKey = windowKey,
         widgetName = target and "FlareUI_RP_ConfigTargetBarWindowStyle" or "FlareUI_RP_ConfigToolbarWindowBorder", title = "Window Style",
-        help = "Choose a border or use the Quest Tracker's decorated title and footer. Buttons keep the action-bar border.",
+        dependentOnOptions = { key },
+        help = "Choose the window border. Quest Tracker adds a decorated header and footer. Buttons keep the same FlareUI border in every style.",
         listContent = { { "Thick", "Thick" }, { "Thin", "Thin" }, { "Frames", "Frames" }, { trackerStyle, trackerStyle } } }
     RefreshWindow()
     Refresh()
