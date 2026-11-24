@@ -2,6 +2,26 @@ local _, ns = ...
 local tiles = setmetatable({}, { __mode = "k" })
 local options = { party = {}, raid = {} }
 local pf
+local rankMarks = { rare = "R", rareelite = "R+", elite = "+" }
+
+-- Shared by the direct and group adapters. FlareUI chooses whether the
+-- prefix is present and supplies its colours, skull and rank formatting.
+function ns.SetAboveName(label, name, unit, levels, ranked)
+    local na = FlareUI.NameAbove
+    if levels and levels.showLevel and na.LevelText then
+        if canaccessvalue(name) and not name then name = "" end
+        local level = FlareUI.UnitShownLevel(unit)
+        if not canaccessvalue(level) then label:SetFormattedText("%s %s", level, name); return end
+        if type(level) == "number" then
+            local rank = ranked and UnitClassification(unit)
+            local mark = canaccessvalue(rank) and rankMarks[rank]
+            local color = level > 0 and FlareUI.UnitLevelColor(unit, level)
+            label:SetFormattedText("%s%s", na.LevelText(level, color, levels.icons, mark), name)
+            return
+        end
+    end
+    label:SetText(name)
+end
 
 local function Kind(f)
     if f.fuiSample then return end
@@ -53,7 +73,15 @@ local function Paint(f, s)
         local nameProfile = opt.names and profile
         MemberName(f, unit, nameProfile, true)
         local pick = AboveKind(f)
-        if pick then PaintLabel(f.NameAboveText, unit, ns.NameFormat(pick), nameProfile, true) end
+        if pick then
+            local full = ns.NameFormat(pick)
+            local name = ns.ProfileName(nameProfile, full) or FlareUI.UnitDisplayName(unit, nil, full)
+            local levels
+            if not f.ringKind and FlareUI.NameAbove.LevelText then
+                if f.ctx then levels = f.ctx.Settings() else levels = pf.NameAboveDb(f) end
+            end
+            ns.SetAboveName(f.NameAboveText, name, unit, levels)
+        end
         s.names = opt.names
     end
     if opt.health or s.applied then
@@ -141,12 +169,13 @@ function ns.StartGroupFrames(config, elements)
         end
     end
     hooksecurefunc(pf, "SlotOn", Discover)
-    hooksecurefunc(FlareUI.NameAbove, "SetName", function(f)
+    hooksecurefunc(FlareUI.NameAbove, "SetName", function(f, _, _, levels)
         local s = tiles[f]
         if s and options[s.kind].names then
             local unit = Live(f)
             local pick = unit and AboveKind(f)
-            if pick then PaintLabel(f.NameAboveText, unit, ns.NameFormat(pick), ns.Profile(unit), false) end
+            local name = pick and ns.ProfileName(ns.Profile(unit), ns.NameFormat(pick))
+            if name then ns.SetAboveName(f.NameAboveText, name, unit, levels) end
         end
     end)
     -- Either addon can finish login first. Attach to existing tiles too; the

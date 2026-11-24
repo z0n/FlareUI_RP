@@ -28,7 +28,7 @@ local function flush() local fn = queued; queued = nil; fn() end
 local function Label()
     return { IsShown = function() return true end,
         SetText = function(self, name) self.text = name end,
-        SetFormattedText = function(self, fmt, name) self.text = fmt:format(name) end }
+        SetFormattedText = function(self, fmt, ...) self.text = fmt:format(...) end }
 end
 local function Tile(unit)
     return { fuiUnit = unit, Name = Label(), NameAboveText = Label(), IsVisible = function() return true end,
@@ -118,6 +118,18 @@ assert(raid.Name.text == "Birch Winter" and raid.NameAboveText.text == "Winter")
 handlers.flareui_rp_party_names(nil, false); handlers.flareui_rp_party_health(nil, false)
 assert(party.Name.text == "A" and party.NameAboveText.text == "A" and party.Health.red == 0.5)
 assert(raid.Name.text == "Birch Winter")
+FlareUI.NameAbove.LevelText = function() return "42 " end
+FlareUI.UnitShownLevel = function() return 42 end
+FlareUI.UnitLevelColor = function() return {} end
+local levels = { showLevel = true }
+raid.ctx.Settings = function() return levels end
+FlareUI.NameAbove.SetName(raid, raid.db, raid.fuiUnit, levels)
+assert(raid.NameAboveText.text == "42 Winter")
+handlers.flareui_rp_raid_names(nil, false)
+assert(raid.NameAboveText.text == "42 B")
+raid.ringKind = "forever"
+handlers.flareui_rp_raid_names(nil, true)
+assert(raid.NameAboveText.text == "Winter")
 editing = true
 raid.Name:SetText("Sample")
 events.GROUP_ROSTER_UPDATE(); flush()

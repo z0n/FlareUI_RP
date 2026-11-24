@@ -4,7 +4,7 @@ local function run(hasNames, hasPlates)
     FlareUI = { UnitFrames = {}, NameAbove = {} }
     local function noop() end
     if hasNames then
-        FlareUI.UnitFrames.ShowsFullName, FlareUI.NameAbove.SetName, FlareUI.UnitDisplayName = noop, noop, noop
+        FlareUI.UnitFrames.ShowsFullName, FlareUI.UnitFrames.SetNameAbove, FlareUI.UnitDisplayName = noop, noop, noop
     end
     if hasPlates then FlareUI.Nameplates = { UpdateName = noop, LevelPrefix = noop } end
     TRP3_Addon = {}
@@ -34,7 +34,7 @@ local function run(hasNames, hasPlates)
     end
     events.WORKFLOW_ON_LOADED()
     assert(page and page.id == "main_config_flareui_rp")
-    assert(not not hooks.SetName == hasNames and not not hooks.UpdateName == hasPlates)
+    assert(not not hooks.SetNameAbove == hasNames and not not hooks.UpdateName == hasPlates)
     local section, controls = nil, {}
     for _, element in ipairs(page.elements) do
         if element.inherit == "TRP3_ConfigH1" then section = element.title

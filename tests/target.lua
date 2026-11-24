@@ -24,14 +24,14 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(key)
 end } }
 FlareUI = { db = { profile = { unitframes = { units = layouts } } },
     NameAbove = { SetName = function() end, Get = function(db) if db and db.kind then return "middle", db.kind end end },
-    UnitFrames = { ShowsFullName = function(f) return f == playerFrame or full end },
+    UnitFrames = { SetNameAbove = function() end, ShowsFullName = function(f) return f == playerFrame or full end },
     UnitDisplayName = UnitNameUnmodified, ClassColorsOn = function() return true end, EditPreviewing = function() return false end }
 FlareUI.UnitFrames.FillSlots = function() end
 FlareUI.UnitFrames.HealthColorMode = function() return "off" end
 FlareUI.UnitFrames.HealthBarColor = function() return 1, 1, 1 end
 function hooksecurefunc(t, key, fn)
     if t == FlareUI.UnitFrames and key == "FillSlots" then return end
-    assert(t == FlareUI.NameAbove and key == "SetName"); afterName = fn
+    assert(t == FlareUI.UnitFrames and key == "SetNameAbove"); afterName = fn
 end
 TRP3_Addon = {}
 TRP3_API = { GameEvents = {}, RegisterCallback = function(_, key, fn) events[key] = fn end }
@@ -64,7 +64,7 @@ assert(playerFrame.NameAboveText.text == "Robin" and target.NameAboveText.text =
 handlers.flareui_rp_unit_names(nil, false)
 assert(ns.healthEnabled.player and ns.healthEnabled.target and playerFrame.Name.text == "Self" and target.NameAboveText.text == "A")
 target.Name.text = "host text"
-afterName(target, layouts.target, "target")
+afterName(target)
 assert(target.Name.text == "host text")
 handlers.flareui_rp_target_health(nil, false)
 handlers.flareui_rp_unit_names(nil, true)
@@ -72,24 +72,29 @@ assert(not ns.healthEnabled.target and ns.healthEnabled.player and target.Name.t
 full = true
 afterName(target)
 assert(target.Name.text == "Lady Aster Moonfall")
-afterName(target, { kind = "firstname" })
+layouts.target.kind = "firstname"
+afterName(target)
 assert(target.NameAboveText.text == "Lady Aster")
+layouts.target.kind = "fullname"
 full, records.A[3] = "lastname", "Moonfall"
 afterName(target)
 assert(target.Name.text == "Moonfall" and target.NameAboveText.text == "Lady Aster Moonfall")
 full = true
-afterName(target, { kind = "lastname" })
+layouts.target.kind = "lastname"
+afterName(target)
 assert(target.Name.text == "Lady Aster Moonfall" and target.NameAboveText.text == "Moonfall")
 records.A[3] = ""
-afterName(target, { kind = "lastname" })
+afterName(target)
 assert(target.NameAboveText.text == "Lady Aster")
 target.NameAboveText.shown = false
 target.NameAboveText.text = "untouched"
-afterName(target, layouts.target)
+afterName(target)
 assert(target.NameAboveText.text == "untouched")
 target.NameAboveText.shown = true
-afterName(target, {})
+layouts.target.kind = nil
+afterName(target)
 assert(target.NameAboveText.text == "untouched")
+layouts.target.kind = "fullname"
 id, npc = "Forest Spider", true
 afterName(target)
 assert(target.Name.text == "Forest Spider")
@@ -143,4 +148,47 @@ for unit, key in pairs({ focus = "Focus", targettarget = "TargetOfTarget", focus
     handlers.flareui_rp_unit_names(nil, true)
     assert(f.Name.text == "Lady Aster")
 end
-print("PASS: independent player and target names, format, NPC and restricted fallback, late and deleted profiles")
+id, npc = "A", false
+layouts.target.showLevel = true
+local label = target.NameAboveText
+function label:SetFormattedText(fmt, ...) self.text = fmt:format(...) end
+FlareUI.UnitShownLevel = function() return 60 end
+FlareUI.UnitLevelColor = function() return "difficulty" end
+function UnitClassification() return "rare" end
+FlareUI.NameAbove.LevelText = function(level, color, _, mark)
+    assert(color == "difficulty")
+    return level .. mark .. " "
+end
+afterName(target)
+assert(label.text == "60R Lady Aster Moonfall")
+handlers.flareui_rp_unit_names(nil, false)
+assert(label.text == "60R A")
+FlareUI.UFRing = { Applies = function(f) return f == target end }
+handlers.flareui_rp_unit_names(nil, true)
+assert(label.text == "Lady Aster Moonfall")
+local secret = {}
+FlareUI.UFRing = nil
+id = "Unknown"
+FlareUI.UnitDisplayName = function() return nil end
+afterName(target)
+assert(label.text == "60R ", "an unresolved game name leaves only the level prefix")
+FlareUI.UnitDisplayName = UnitNameUnmodified
+id = "A"
+FlareUI.UnitShownLevel = function() return secret end
+function canaccessvalue(value) return value ~= secret end
+function label:SetFormattedText(fmt, level, name)
+    assert(fmt == "%s %s" and level == secret and name == "Lady Aster Moonfall")
+    self.text = "passed through"
+end
+afterName(target)
+assert(label.text == "passed through")
+target.NameAboveText = nil
+id = "B"
+records.B = { "Birch", "Birch Winter" }
+target.Name:SetText(id)
+afterName(target)
+assert(target.Name.text == "Birch", "a target swap updates the in-frame name with Name Above Frames off")
+target.Name:SetText("Sample")
+afterName(target, true)
+assert(target.Name.text == "Sample")
+print("PASS: direct frame names, level prefixes, NPC and restricted fallback, late and deleted profiles")

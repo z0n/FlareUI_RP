@@ -1,7 +1,5 @@
 local _, ns = ...
 
--- Stock FlareUI calls NameAbove.SetName immediately after writing the in-frame
--- label. Hook the helper, not SetText: no recursive writes or frame layout changes.
 local function DisplayName(unit, full, profile)
     local name = ns.ProfileName(profile, full)
     if name then return name end
@@ -9,7 +7,7 @@ local function DisplayName(unit, full, profile)
     return FlareUI.UnitDisplayName(unit, nil, full)
 end
 
-local function Paint(frame, settings, restoreNames)
+local function Paint(frame, restoreNames)
     local unit = ns.DirectUnit(frame)
     if not unit or not frame.Name or not ns.DirectExists(unit) or (FlareUI.EditPreviewing and FlareUI.EditPreviewing()) then return end
     local rp
@@ -27,23 +25,20 @@ local function Paint(frame, settings, restoreNames)
 
     local above = frame.NameAboveText
     if not above or not above:IsShown() or not FlareUI.NameAbove.Get then return end
-    -- The post-hook receives the layout's settings. On a TRP3-only refresh,
-    -- read the current profile, even if no layout update happened since login.
-    if not settings then
-        local profile = FlareUI.db and FlareUI.db.profile
-        local units = profile and profile.unitframes and profile.unitframes.units
-        settings = units and units[unit]
-    end
+    local profile = FlareUI.db and FlareUI.db.profile
+    local units = profile and profile.unitframes and profile.unitframes.units
+    local settings = units and units[unit]
     local slot, kind = FlareUI.NameAbove.Get(settings)
     if not slot then return end
     local aboveFull = ns.NameFormat(kind)
     if aboveFull ~= full then name = DisplayName(unit, aboveFull, rp) end
-    above:SetText(name)
+    local levels = settings.showLevel and not (FlareUI.UFRing and FlareUI.UFRing.Applies(frame)) and settings
+    ns.SetAboveName(above, name, unit, levels, true)
 end
 
 local queued
 local function PaintAll(restoreNames)
-    for _, frameName in pairs(ns.directFrames) do Paint(_G[frameName], nil, restoreNames) end
+    for _, frameName in pairs(ns.directFrames) do Paint(_G[frameName], restoreNames) end
 end
 local function Refresh()
     if queued then return end
@@ -55,9 +50,12 @@ local function Refresh()
 end
 
 local function StartUnitFrames(config, elements)
-    if not (FlareUI.NameAbove and FlareUI.NameAbove.SetName and FlareUI.UnitFrames
+    if not (FlareUI.NameAbove and FlareUI.UnitFrames and FlareUI.UnitFrames.SetNameAbove
         and FlareUI.UnitFrames.ShowsFullName and FlareUI.UnitDisplayName) then return end
-    hooksecurefunc(FlareUI.NameAbove, "SetName", function(frame, settings) Paint(frame, settings) end)
+    -- UpdateName calls this even when the optional above-frame label doesn't exist.
+    hooksecurefunc(FlareUI.UnitFrames, "SetNameAbove", function(frame, sample)
+        if not sample then Paint(frame) end
+    end)
     ns.StartUnitHealth()
     local namesKey = "flareui_rp_unit_names"
     -- Preserve the standalone addon's previous behaviour on first install/update.
