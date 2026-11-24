@@ -1,10 +1,24 @@
-**FlareUI RP** extends [FlareUI](https://www.curseforge.com/wow/addons/flareui) in **WoW: Forever** by showing characters’ [Total RP 3](https://www.curseforge.com/wow/addons/total-rp-3) names and profile colours on unit frames and player nameplates.
+**FlareUI RP** brings Total RP 3 profiles to FlareUI in **WoW: Forever**.
 
-- **RP names:** Show RP names on player, target, focus, target-of-target, target-of-focus, party and raid frames, and on floating player nameplates. RP names follow FlareUI’s **First Name**, **Last Name** or **Full Name** setting for each label.
-- **Profile colours:** Enable **Look > Class Colours** on a unit frame, or choose **Class & Reaction** for nameplate health bars. Health warnings, gradients and group name colours keep priority.
-- **RP guilds:** Opt in to **Use RP Guild Names** and enable **Show Guild Name** on friendly or enemy **Name Only** plates to show a profile’s custom guild, even for players without an in-game guild. Profiles without a custom guild keep the usual guild line.
-- **RP titles:** Choose a profile’s short or full title where FlareUI’s **Show Titles** is enabled on player nameplates. By default, FlareUI keeps its usual title.
-- **RP guildmates:** Enable **Colour RP Guild Members** in FlareUI RP (off by default) and **Colour Guild Members** on FlareUI’s friendly **Name Only** plates to colour matching RP guildmates’ names like in-game guildmates. The guild label is optional.
-- **TRP3 styling:** Give the TRP3 main window, toolbar and target bar a matching FlareUI appearance.
+## Unit frames and player nameplates
 
-Install both linked addons, then open **Total RP 3 > Settings > FlareUI RP** to configure RP names, profile colours and styling. Setup hints point to the FlareUI settings for health colours, guild labels and guildmate colours.
+- **RP names** follow FlareUI’s first, last or full name setting for each label.
+- **Profile colours** replace class colours while preserving health warnings and group colours.
+
+## Optional nameplate features
+
+On FlareUI’s **Name Only** plates, you can:
+
+- Show a character’s **short or full RP title**.
+- Display their **RP guild**, even without an in-game guild.
+- Highlight **RP guildmates** on friendly plates, even with guild names hidden.
+
+## Total RP 3 appearance
+
+Apply FlareUI styling to the **main window**, **toolbar** or **target bar**. Main-window styling also covers **Total RP 3: Extended** inventory slots.
+
+## Getting started
+
+Install [FlareUI](https://www.curseforge.com/wow/addons/flareui) and [Total RP 3](https://www.curseforge.com/wow/addons/total-rp-3) alongside FlareUI RP. Enable **Unit Frames** or **Nameplates** (or both) in FlareUI.
+
+RP names and profile colours are on by default. Find options and setup hints under **Total RP 3 > Settings > FlareUI RP**.
