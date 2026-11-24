@@ -1,18 +1,18 @@
 local _, ns = ...
 
-local key = "flareui_rp_toolbar_borders"
-local windowKey = "flareui_rp_toolbar_window_border"
 local windowStyles = { Thick = 16, Thin = 8, Frames = 16 }
 local trackerStyle = "Quest Tracker"
 local trackerAtlas = "ui-questtracker-primary-objective-header"
 
 -- Keep the end ornaments compact even when the toolbar wraps to one column.
 -- Only the middle stretches. The foot uses the ruled lower band of the same atlas.
-local function AddTrackerStrip(parts, frame, bounds, info, footer)
+local function AddTrackerStrip(parts, frame, bounds, info, placement)
     if not (frame and frame.CreateTexture) then return end
+    local rail = placement ~= "header"
+    local bottom = placement == "bottom"
     local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
-    if footer then t, b = t + (b - t) * 31/40, t + (b - t) * 38/40 end
-    local height = footer and info.height * 7/40 or info.height * 25/30
+    if rail then t, b = t + (b - t) * 31/40, t + (b - t) * 38/40 end
+    local height = rail and info.height * 7/40 or info.height * 25/30
     local function Slice()
         local tex = frame:CreateTexture(nil, "ARTWORK")
         tex:SetTexture(info.file)
@@ -29,9 +29,9 @@ local function AddTrackerStrip(parts, frame, bounds, info, footer)
     -- FlareUI insets its header by 8, then extends it by reach-1 / reach+5.
     local leftOut, rightOut = reach - 9, reach - 3
     local left, right, mid = Slice(), Slice(), Slice()
-    local y = footer and 2.5 or -13
-    left:SetPoint("LEFT", bounds, footer and "BOTTOMLEFT" or "TOPLEFT", -leftOut, y)
-    right:SetPoint("RIGHT", bounds, footer and "BOTTOMRIGHT" or "TOPRIGHT", rightOut, y)
+    local y = bottom and 2.5 or rail and -2.5 or -13
+    left:SetPoint("LEFT", bounds, bottom and "BOTTOMLEFT" or "TOPLEFT", -leftOut, y)
+    right:SetPoint("RIGHT", bounds, bottom and "BOTTOMRIGHT" or "TOPRIGHT", rightOut, y)
     mid:SetPoint("LEFT", left, "RIGHT")
     mid:SetPoint("RIGHT", right, "LEFT")
     mid:SetTexCoord(l + 0.495 * (r-l), l + 0.505 * (r-l), t, b)
@@ -76,19 +76,61 @@ local function PaintWindow(frame, native, file, edge, clear)
     end
 end
 
-function ns.StartToolbar(config, elements)
-    local toolbar = TRP3_ToolbarFrame
-    if not (TRP3_API.toolbar and toolbar and toolbar.UpdateButtons
-        and toolbar.buttonPool and toolbar.buttonPool.EnumerateActive) then return end
+-- Glance slots use a round icon mask and an unnamed minimap ring instead
+-- of the named Border on TRP3's action buttons. Identify the art, not its index.
+local function GlanceRing(slot)
+    local path = "Interface\\MINIMAP\\MiniMap-TrackingBorder.blp"
+    local id = GetFileIDFromPath and GetFileIDFromPath(path)
+    for _, region in ipairs({ slot:GetRegions() }) do
+        local tex = region.GetTexture and region:GetTexture()
+        if (id and tex == id) or (type(tex) == "string" and tex:lower() == path:lower()) then return region end
+    end
+end
+
+local function StartBar(config, elements, toolbar, target)
+    local key = target and "flareui_rp_targetbar_skin" or "flareui_rp_toolbar_borders"
+    local windowKey = target and "flareui_rp_targetbar_window_style" or "flareui_rp_toolbar_window_border"
+    local label = target and "Total RP 3 Target Bar" or "Total RP 3 Toolbar"
     local media = LibStub and LibStub("LibSharedMedia-3.0", true)
     local file = media and media:Fetch("border", "FlareUI Frames", true)
     if not file then return end
 
     config.registerConfigKey(key, true)
-    config.registerConfigKey(windowKey, trackerStyle)
+    config.registerConfigKey(windowKey, target and "Frames" or trackerStyle)
     local enabled = config.getValue(key)
     local windowStyle = config.getValue(windowKey)
-    local native = {}
+    local native, skins = {}, {}
+    local function PaintButton(button, ring)
+        local skin = skins[button]
+        if not skin then
+            skin = CreateFrame("Frame", nil, button, "BackdropTemplate")
+            skin:EnableMouse(false)
+            skin:SetAllPoints(button.Icon)
+            skins[button] = skin
+        end
+        if skin.nativeAlpha == nil then
+            skin.nativeBorder = ring or button.Border
+            skin.nativeAlpha = skin.nativeBorder:GetAlpha()
+            skin.nativeBorder:SetAlpha(0)
+            if ring then
+                button.Icon:RemoveMaskTexture(button.IconMask)
+                skin.mask = button.IconMask
+                local hover = button:GetHighlightTexture()
+                if hover and hover:GetTexture() then
+                    skin.hoverFile, skin.hoverAlpha = hover:GetTexture(), hover:GetAlpha()
+                    hover:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    hover:SetAlpha(skin.hoverAlpha * 0.18)
+                end
+            end
+        end
+        local edge = 16 * math.min(button:GetWidth() / 45, 1)
+        if skin.edge ~= edge then
+            skin:SetBackdrop({ edgeFile = file, edgeSize = edge })
+            skin:SetBackdropBorderColor(0.65, 0.49, 0.27, 1)
+            skin.edge = edge
+        end
+        skin:Show()
+    end
     local strips, surround, panelShown
     local function RefreshWindow()
         local tracker = windowStyle == trackerStyle
@@ -96,12 +138,12 @@ function ns.StartToolbar(config, elements)
         local edge = windowStyles[style]
         local border = enabled and media:Fetch("border", "FlareUI " .. style, true)
         local container = toolbar.Container
-        local panel = container and container.Backdrop
-        local title = toolbar.TitleBar
-        panelShown = container and container:IsShown()
+        local panel = target and toolbar or container and container.Backdrop
+        local title = target and toolbar.Header or toolbar.TitleBar
+        panelShown = target or container and container:IsShown()
         -- TRP3 hides the container when its last button is removed. The title
         -- still needs its own backdrop until there's a panel to frame again.
-        local decorate = tracker and border and panelShown and panel and title and toolbar.UpdateTitleBar
+        local decorate = tracker and border and panelShown and panel and title and (target or toolbar.UpdateTitleBar)
         if decorate and not strips then
             local info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(trackerAtlas)
             if info and info.file and info.width and info.width > 0 and info.height and info.height > 0 then
@@ -116,7 +158,11 @@ function ns.StartToolbar(config, elements)
                 surround:SetBackdropBorderColor(0.65, 0.49, 0.27, 1)
                 local function Fit()
                     surround:ClearAllPoints()
-                    if title:IsShown() then
+                    if target then
+                        surround:SetPoint("TOP", title, "TOP")
+                        surround:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT")
+                        surround:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT")
+                    elseif title:IsShown() then
                         surround:SetPoint("TOPLEFT", toolbar, "TOPLEFT")
                         surround:SetPoint("TOPRIGHT", toolbar, "TOPRIGHT")
                         surround:SetPoint("BOTTOM", panel, "BOTTOM")
@@ -124,54 +170,80 @@ function ns.StartToolbar(config, elements)
                         surround:SetAllPoints(panel)
                     end
                 end
-                hooksecurefunc(toolbar, "UpdateTitleBar", Fit)
+                if not target then hooksecurefunc(toolbar, "UpdateTitleBar", Fit) end
                 Fit()
                 strips = {}
-                AddTrackerStrip(strips, title, surround, info, false)
-                AddTrackerStrip(strips, panel, surround, info, true)
+                AddTrackerStrip(strips, title, surround, info, "header")
+                AddTrackerStrip(strips, target and surround or panel, surround, info, "bottom")
+                if target and TRP3_GlanceBar then
+                    -- The glance row has no title: use the narrow ornament at
+                    -- both edges, anchored to the row even when it is detached.
+                    AddTrackerStrip(strips, TRP3_GlanceBar, TRP3_GlanceBar, info, "top")
+                    AddTrackerStrip(strips, TRP3_GlanceBar, TRP3_GlanceBar, info, "bottom")
+                end
             end
         end
         decorate = not not (decorate and surround)
+        -- TRP3's target group box forwards border tint changes to its header.
+        -- Save the header first when applying and restore it last when disabling.
+        if target and border then PaintWindow(title, native, border, math.min(edge, 12), decorate) end
         PaintWindow(panel, native, border, edge, decorate)
-        PaintWindow(title, native, border, math.min(edge, 12), decorate)
+        if not target or not border then PaintWindow(title, native, border, math.min(edge, 12), decorate) end
+        if target and TRP3_GlanceBar then
+            local bar = TRP3_GlanceBar
+            PaintWindow(bar, native, border, edge)
+            if enabled then
+                for i = 1, 5 do
+                    local slot = _G["TRP3_GlanceBarSlot" .. i]
+                    if slot and slot:GetParent() == bar and slot.Icon and slot.IconMask then
+                        local ring = skins[slot] and skins[slot].nativeBorder or GlanceRing(slot)
+                        if ring then PaintButton(slot, ring) end
+                    end
+                end
+            end
+        end
         if surround then surround:SetShown(decorate) end
         if strips then
             for _, tex in ipairs(strips) do tex:SetShown(decorate) end
         end
     end
-    local skins = {}
+    local function Buttons()
+        if not target then return toolbar.buttonPool:EnumerateActive() end
+        -- TRP3 creates these lazily and reuses them, numbered from zero.
+        local i = 0
+        return function()
+            while true do
+                local button = _G["TRP3_TargetFrameButton" .. i]
+                if not button or button:GetParent() ~= toolbar then return end
+                i = i + 1
+                if button:IsShown() then return button end
+            end
+        end
+    end
     local function Refresh()
         if not enabled then return end
         if windowStyle == trackerStyle and toolbar.Container and toolbar.Container:IsShown() ~= panelShown then
             RefreshWindow()
         end
-        for button in toolbar.buttonPool:EnumerateActive() do
-            if button.Icon and button.Border then
-                local skin = skins[button]
-                if not skin then
-                    skin = CreateFrame("Frame", nil, button, "BackdropTemplate")
-                    skin:EnableMouse(false)
-                    skin:SetAllPoints(button.Icon)
-                    skins[button] = skin
-                end
-                if skin.nativeAlpha == nil then
-                    skin.nativeAlpha = button.Border:GetAlpha()
-                    button.Border:SetAlpha(0)
-                end
-                -- Scale the action-bar edge down for TRP3's smaller icons.
-                local edge = 16 * math.min(button:GetWidth() / 45, 1)
-                if skin.edge ~= edge then
-                    skin:SetBackdrop({ edgeFile = file, edgeSize = edge })
-                    skin:SetBackdropBorderColor(0.65, 0.49, 0.27, 1)
-                    skin.edge = edge
-                end
-                skin:Show()
-            end
+        for button in Buttons() do
+            if button.Icon and button.Border then PaintButton(button) end
         end
     end
-    -- UpdateButtons is also used as a one-shot OnUpdate. Hook the instance
-    -- before TRP3's WORKFLOW_ON_FINISH builds its first toolbar.
-    hooksecurefunc(toolbar, "UpdateButtons", Refresh)
+    if target then
+        -- TRP3 shows the target bar before assigning buttons. Wait until that
+        -- layout is complete, including target swaps with the same dimensions.
+        local pending
+        toolbar:HookScript("OnShow", function()
+            if not enabled or pending then return end
+            pending = true
+            C_Timer.After(0, function()
+                pending = nil
+                if toolbar:IsShown() then Refresh() end
+            end)
+        end)
+    else
+        hooksecurefunc(toolbar, "UpdateButtons", Refresh)
+    end
     config.registerHandler(key, function(_, on)
         enabled = on
         RefreshWindow()
@@ -179,7 +251,16 @@ function ns.StartToolbar(config, elements)
         -- Restore inactive pool members too, before TRP3 reuses them.
         for button, skin in pairs(skins) do
             if skin.nativeAlpha ~= nil then
-                button.Border:SetAlpha(skin.nativeAlpha)
+                skin.nativeBorder:SetAlpha(skin.nativeAlpha)
+                if skin.mask then button.Icon:AddMaskTexture(skin.mask); skin.mask = nil end
+                if skin.hoverFile then
+                    local hover = button:GetHighlightTexture()
+                    if hover then
+                        hover:SetTexture(skin.hoverFile)
+                        hover:SetAlpha(skin.hoverAlpha)
+                    end
+                    skin.hoverFile, skin.hoverAlpha = nil, nil
+                end
                 skin.nativeAlpha = nil
             end
             skin:Hide()
@@ -189,13 +270,25 @@ function ns.StartToolbar(config, elements)
         windowStyle = style
         RefreshWindow()
     end)
-    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "Total RP 3 Toolbar" }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Skin Total RP 3 Toolbar",
-        help = "Use FlareUI borders on the toolbar window, title and buttons." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = label }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Skin " .. label,
+        help = "Use FlareUI borders on the window, title and buttons." }
     elements[#elements + 1] = { inherit = "TRP3_ConfigDropDown", configKey = windowKey,
-        widgetName = "FlareUI_RP_ConfigToolbarWindowBorder", title = "Window Style",
+        widgetName = target and "FlareUI_RP_ConfigTargetBarWindowStyle" or "FlareUI_RP_ConfigToolbarWindowBorder", title = "Window Style",
         help = "Choose a border or use the Quest Tracker's decorated title and footer. Buttons keep the action-bar border.",
         listContent = { { "Thick", "Thick" }, { "Thin", "Thin" }, { "Frames", "Frames" }, { trackerStyle, trackerStyle } } }
     RefreshWindow()
     Refresh()
+end
+
+function ns.StartToolbar(config, elements)
+    local toolbar = TRP3_ToolbarFrame
+    if TRP3_API.toolbar and toolbar and toolbar.UpdateButtons
+        and toolbar.buttonPool and toolbar.buttonPool.EnumerateActive then
+        StartBar(config, elements, toolbar, false)
+    end
+    local target = TRP3_TargetFrame
+    if TRP3_API.target and target and target.Header then
+        StartBar(config, elements, target, true)
+    end
 end

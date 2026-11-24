@@ -45,7 +45,7 @@ function LibStub() return { Fetch = function(_, kind, name, noDefault)
     assert(kind == "border" and noDefault); return file and name
 end } end
 function CreateFrame(_, _, parent)
-    if parent == panel then
+    if parent == panel or parent == TRP3_TargetFrame then
         assert(not surround)
         surround = backdrop("outer")
         surround.ClearAllPoints = function(self) self.anchors = {} end
@@ -54,6 +54,7 @@ function CreateFrame(_, _, parent)
         surround.SetShown = function(self, shown) self.shown = shown end
         surround.EnableMouse, surround.SetFrameLevel = noop, noop
         surround.GetWidth = function() return 250 end
+        surround.CreateTexture = texture
         surround.sizeChanged = {}
         surround.HookScript = function(self, event, fn)
             assert(event == "OnSizeChanged")
@@ -144,3 +145,89 @@ toggle(nil, false)
 for _, tex in ipairs(pieces) do assert(not tex.shown) end
 assert(panel.db.edgeFile == "panel" and title.db.edgeFile == "title")
 print("PASS: toolbar window styles, resizing, pool reuse and native appearance restoration")
+
+-- Target bar can run with the toolbar module disabled. TRP3 creates and
+-- reassigns its named action buttons *after* the target frame is shown.
+local target, header = backdrop("target"), backdrop("name")
+local shown, onShow, pending = false
+target.Header = header
+target.GetFrameLevel = TRP3_ToolbarFrame.GetFrameLevel
+target.IsShown = function() return shown end
+target.HookScript = function(_, event, f) assert(event == "OnShow"); onShow = f end
+header.CreateTexture = texture
+local setBorder = target.SetBackdropBorderColor
+target.SetBackdropBorderColor = function(self, ...)
+    setBorder(self, ...)
+    header:SetBackdropBorderColor(...)
+end
+header.border[1] = 0.23
+TRP3_TargetFrame, TRP3_API.target, TRP3_API.toolbar, surround = target, {}, nil, nil
+C_Timer = { After = function(delay, f) assert(delay == 0 and not pending); pending = f end }
+local controls = {}
+TRP3_GlanceBar = backdrop("glances")
+TRP3_GlanceBar.CreateTexture = texture
+TRP3_GlanceBar.GetWidth = function() return 140 end
+TRP3_GlanceBar.HookScript = function(_, event) assert(event == "OnSizeChanged") end
+local rings = {}
+for i = 1, 5 do
+    local slot = button(0.8)
+    local ring = slot.Border
+    rings[i], slot.Border = ring, nil
+    ring.GetTexture = function() return 12345 end
+    local hover = { file = 67890, alpha = 0.9, GetAlpha = ring.GetAlpha, SetAlpha = ring.SetAlpha,
+        GetTexture = function(self) return self.file end, SetTexture = function(self, v) self.file = v end }
+    slot.GetHighlightTexture = function() return hover end
+    slot.IconMask = {}
+    slot.Icon.mask = slot.IconMask
+    slot.Icon.RemoveMaskTexture = function(icon, mask) assert(icon.mask == mask); icon.mask = nil end
+    slot.Icon.AddMaskTexture = function(icon, mask) assert(not icon.mask); icon.mask = mask end
+    slot.GetRegions = function() return slot.Icon, ring end
+    slot.GetParent = function() return TRP3_GlanceBar end
+    _G["TRP3_GlanceBarSlot" .. i] = slot
+end
+GetFileIDFromPath = function() return 12345 end
+ns.StartToolbar(config, controls)
+local targetToggle = handlers.flareui_rp_targetbar_skin
+assert(values.flareui_rp_targetbar_window_style == "Frames" and target.db.edgeFile == "FlareUI Frames")
+assert(TRP3_GlanceBar.db.edgeFile == "FlareUI Frames")
+for i, ring in ipairs(rings) do
+    local slot = _G["TRP3_GlanceBarSlot" .. i]
+    assert(ring.alpha == 0 and not slot.Icon.mask and skins[slot].shown)
+    local hover = slot:GetHighlightTexture()
+    assert(hover.file == "Interface\\Buttons\\WHITE8X8" and hover.alpha < 0.9)
+end
+handlers.flareui_rp_targetbar_window_style(nil, "Thin")
+assert(TRP3_GlanceBar.db.edgeFile == "FlareUI Thin")
+handlers.flareui_rp_targetbar_window_style(nil, "Quest Tracker")
+assert(#controls == 3 and surround.shown and surround.anchors.TOP == header)
+local glanceArt = {}
+for _, piece in ipairs(pieces) do
+    if piece.parent == TRP3_GlanceBar then glanceArt[#glanceArt + 1] = piece end
+end
+assert(#glanceArt == 6 and glanceArt[1].anchor == TRP3_GlanceBar and glanceArt[4].anchor == TRP3_GlanceBar)
+handlers.flareui_rp_targetbar_window_style(nil, "Thick")
+for _, piece in ipairs(glanceArt) do assert(not piece.shown) end
+handlers.flareui_rp_targetbar_window_style(nil, "Quest Tracker")
+for _, piece in ipairs(glanceArt) do assert(piece.shown) end
+shown = true
+onShow()
+local action = button(0.7)
+action.GetParent = function() return target end
+action.IsShown = function() return true end
+TRP3_TargetFrameButton0 = action
+pending(); pending = nil
+assert(skins[action].shown and action.Border.alpha == 0)
+onShow()
+targetToggle(nil, false)
+pending(); pending = nil
+assert(action.Border.alpha == 0.7 and not skins[action].shown and not surround.shown)
+assert(TRP3_GlanceBar.db.edgeFile == "glances")
+for _, piece in ipairs(glanceArt) do assert(not piece.shown) end
+for i, ring in ipairs(rings) do
+    local slot = _G["TRP3_GlanceBarSlot" .. i]
+    assert(ring.alpha == 0.8 and slot.Icon.mask == slot.IconMask and not skins[slot].shown)
+    local hover = slot:GetHighlightTexture()
+    assert(hover.file == 67890 and hover.alpha == 0.9)
+end
+assert(header.border[1] == 0.23 and header.db.edgeFile == "name" and target.db.edgeFile == "target")
+print("PASS: independent target bar skin, late actions and native header restoration")
