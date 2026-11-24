@@ -9,6 +9,7 @@ ignore:
   - DEPENDENCIES.md
   - .github
   - AGENTS.md
+  - CURSEFORGE.md
   - README.md
   - opencode.json
   - tests

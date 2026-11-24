@@ -5,7 +5,7 @@
 1. **Use the recorded baseline.** For dependency-facing work, consult [DEPENDENCIES.md](DEPENDENCIES.md) and read the relevant tagged source locally with `git show <tag>:<path>`. Routine questions and changes need no upstream fetch or version report. Use `@dependency-audit` when the maintainer requests an update check.
 2. **Implement and verify** against that baseline. For dependency-facing changes, update its verification record with the change, checks performed and any in-game results. Leave changes uncommitted unless asked.
 3. **When asked to prepare a release,** review changes since the last tag, update `CHANGELOG.md` and `## Version` in `FlareUI_RP.toc`, and run `./tools/check`. Keep only the current release in `CHANGELOG.md`; move previous entries to `CHANGELOG-history.md`, newest first. The packager uses the entire `CHANGELOG.md` as the release description. Give the maintainer the exact Git commands to tag the release commit and push the branch and tag together; pushing the tag publishes the addon.
-4. **Check the CurseForge description** against the release. If it’s still accurate, say so. If it’s stale, provide a concise, paste-ready Markdown replacement. If you can’t read the live description, ask for its current text.
+4. **Review [CURSEFORGE.md](CURSEFORGE.md)** against the release. This file is the source for the CurseForge project description. If it needs an update, edit it here. When it has changed since the previous release tag, remind the maintainer to copy the tagged file’s contents into the CurseForge description editor after release.
 
 ## Design principle: substitute RP identity, preserve FlareUI’s choices
 
