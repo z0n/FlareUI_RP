@@ -19,6 +19,8 @@ RP names follow each label’s **First Name**, **Last Name** or **Full Name** se
 
 The main window uses FlareUI’s bronze frame and stone background while preserving character-sheet parchment and player-chosen artwork. The toolbar defaults to **Quest Tracker** style; the target bar and **At First Glance** panel default to **Frames**. Turn off **Use FlareUI Styling** for the main window, toolbar or target bar separately to restore its native appearance.
 
+With **Total RP 3: Extended** installed, main-window styling gives **Character > Inventory** FlareUI’s bag-slot background. Slot borders follow FlareUI’s **Skin Item Slots** setting: Off keeps Extended’s native borders; Thin and Thick use bronze, or the RP item’s quality colour when **Colour by Rarity** is enabled. Extended still supplies the item icons and quest markers.
+
 ## Development
 
 With LuaJIT installed, run `./tools/check`. See [AGENTS.md](AGENTS.md) for development and release instructions.

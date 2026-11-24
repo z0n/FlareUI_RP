@@ -242,6 +242,95 @@ category:resetLayout()
 opened()
 assert(arrow:IsShown() and not category.textures.OVERLAY:IsShown())
 local page = Frame(pages)
+TRP3_QuestLogPage = Frame(pages)
+local navBar = Frame(TRP3_QuestLogPage)
+TRP3_QuestLogPage.navBar = navBar
+TRP3_QuestLogPage.TopEdge, navBar.InsetBorderLeft = Frame(), Frame()
+local questDetails = Frame(TRP3_QuestLogPage)
+questDetails.Background = Frame()
+navBar.action, navBar.home = TextureButton(navBar), TextureButton(navBar)
+opened()
+local pageTrim = TRP3_QuestLogPage.children[#TRP3_QuestLogPage.children]
+assert(pageTrim.template == "BackdropTemplate" and #navBar.children == 2, "keep the native breadcrumb without a second rim")
+assert(TRP3_QuestLogPage.TopEdge.alpha == 0 and navBar.InsetBorderLeft.alpha == 0.7 and questDetails.Background.alpha == 0.7)
+assert(navBar.action.Normal.atlas == "common-dropdown-a-button" and navBar.home.Normal == navBar.home.art)
+TRP3_QuestLogPage:Hide()
+-- Extended may create its page after the skin starts.
+TRP3_InventoryPage = Frame(pages)
+local inventory = Frame(TRP3_InventoryPage)
+TRP3_InventoryPage.Main = inventory
+inventory.Model = Frame(inventory)
+local panelFill, top, bottom = Frame(), Frame(), Frame()
+panelFill.kind = "Texture"
+panelFill:SetPoint("TOPLEFT", inventory, "TOPLEFT", 0, 0)
+panelFill:SetPoint("BOTTOMRIGHT", inventory, "BOTTOMRIGHT", 0, 0)
+local function CheckPanelInset(inset)
+    assert(panelFill:GetNumPoints() == 2)
+    for i, anchor in ipairs({"TOPLEFT", "BOTTOMRIGHT"}) do
+        local p, parent, relative, x, y = panelFill:GetPoint(i)
+        local offset = i == 1 and inset or -inset
+        assert(p == anchor and parent == inventory and relative == anchor and x == offset and y == -offset)
+    end
+end
+panelFill.GetDrawLayer = function() return "BACKGROUND", 0 end
+top.GetDrawLayer = function() return "BORDER", -5 end
+bottom.GetDrawLayer = top.GetDrawLayer
+inventory.InsetBorderLeft = top
+inventory.GetRegions = function() return panelFill, top, bottom end
+local empty, equipped, otherSlot = Frame(inventory), Frame(inventory), Frame(inventory)
+empty.bkg, equipped.bkg, otherSlot.bkg = Frame(), Frame(), Frame()
+equipped.Icon, equipped.IconBorder = Frame(), Frame()
+local bagSettings = {}
+FlareUI = { db = { profile = { tweaks = bagSettings } } }
+equipped.IconBorder.GetVertexColor = function() return 0.3, 0.4, 1 end
+equipped.additionalOnUpdateHandler = noop
+empty.IconBorder = Frame()
+empty.IconBorder:Hide()
+inventory.slots = { empty, equipped }
+local getAtlas = C_Texture.GetAtlasInfo
+C_Texture.GetAtlasInfo = function(atlas) return atlas ~= "bags-item-slot64" end
+opened()
+assert(empty.bkg.alpha == 0.7 and not empty.textures)
+assert(equipped.bkg.alpha == 0.7 and not equipped.textures)
+assert(equipped.children[1]:IsShown() and equipped.IconBorder.alpha == 0, "missing background atlas must not disable borders")
+assert(top.alpha == 0 and bottom.alpha == 0 and panelFill.alpha == 0.7)
+CheckPanelInset(4)
+local panelEdge = inventory.children[#inventory.children]
+assert(panelEdge.template == "BackdropTemplate" and panelEdge:IsShown())
+C_Texture.GetAtlasInfo = getAtlas
+opened()
+local slotFill = empty.textures.BACKGROUND
+empty.IconBorder:Show() -- An item arrives before Extended installs its update handler.
+assert(empty.bkg.alpha == 0 and #empty.children == 0 and empty.IconBorder.alpha == 0.7,
+    "background styling must preserve the live native border without an update hook")
+empty.IconBorder.GetVertexColor = equipped.IconBorder.GetVertexColor
+empty.additionalOnUpdateHandler = noop
+opened()
+assert(empty.IconBorder.alpha == 0, "a later page visit should pick up the update hook")
+local slotEdge = empty.children[1]
+assert(slotEdge.template == "BackdropTemplate" and slotEdge:IsShown() and #otherSlot.children == 0)
+assert(slotFill.atlas == "bags-item-slot64" and slotFill.allPoints == empty.bkg and empty.bkg.alpha == 0)
+assert(equipped.bkg.alpha == 0 and equipped.Icon.alpha == 0.7 and equipped.IconBorder.alpha == 0)
+local itemEdge = equipped.children[1]
+itemEdge.SetBackdrop = function(self, backdrop) self.size = backdrop.edgeSize end
+itemEdge.SetBackdropBorderColor = function(self, r, g, b) self.rgb = {r,g,b} end
+bagSettings.bagThickBorders = true
+equipped:additionalOnUpdateHandler()
+assert(itemEdge.size == 16 and itemEdge.rgb[3] == 1)
+equipped.IconBorder:Hide() -- Extended repaints a slot after an item is removed.
+equipped:additionalOnUpdateHandler()
+assert(itemEdge.rgb[3] == 0.27)
+equipped.IconBorder:Show()
+bagSettings.bagRarity = false
+equipped:additionalOnUpdateHandler()
+assert(itemEdge.rgb[3] == 0.27)
+bagSettings.bagSkinSlots = false
+equipped:additionalOnUpdateHandler()
+assert(not itemEdge:IsShown() and equipped.IconBorder.alpha == 0.7)
+bagSettings.bagSkinSlots, bagSettings.bagThickBorders = true, false
+equipped:additionalOnUpdateHandler()
+assert(itemEdge:IsShown() and itemEdge.size == 8 and equipped.IconBorder.alpha == 0)
+assert(otherSlot.bkg.alpha == 0.7 and not otherSlot.textures)
 TRP3_Dashboard = Frame(pages)
 local parchment = Frame(TRP3_Dashboard)
 TRP3_Dashboard.Background = parchment
@@ -455,7 +544,12 @@ category:SetVisualState("DISABLED")
 assert(category.Text.r == 1 and category.Text.g == 0.84 and category.Text.b == 0.50)
 CheckRow(true)
 page:Hide()
+TRP3_InventoryPage:Hide()
 toggle(nil, false)
+assert(not slotFill:IsShown() and empty.bkg.alpha == 0.7 and equipped.bkg.alpha == 0.7)
+assert(not slotEdge:IsShown() and equipped.IconBorder.alpha == 0.7)
+assert(not panelEdge:IsShown() and top.alpha == 0.7 and bottom.alpha == 0.7)
+CheckPanelInset(0)
 assert(TRP3_MainTutorialButton:GetFrameLevel() == tutorialLevel and TRP3_MainTutorialButton:IsShown())
 local point, relative, _, x, y = category.Text:GetPoint(1)
 assert(point == "RIGHT" and relative == category and x == -19 and y == 2)
@@ -463,6 +557,9 @@ listPage.ScrollBox.initialize(profileRow)
 TRP3_RegisterAbout_AboutPanel_Edit:OnShow()
 assert(not remove.textures.BACKGROUND:IsShown() and not profileRow.BindButton.textures.BACKGROUND:IsShown())
 assert(options.Normal == options.art and options.Pushed == options.art and options.Highlight == options.art and not options.Disabled)
+assert(navBar.action.Normal == navBar.action.art)
+assert(not pageTrim:IsShown())
+assert(TRP3_QuestLogPage.TopEdge.alpha == 0.7 and navBar.InsetBorderLeft.alpha == 0.7)
 assert(#anchors == 2 and anchors[1][1] == "TOPLEFT" and anchors[2][2] == TRP3_Dashboard)
 assert(settingsPage.Background.alpha == 0.7 and profilesPage.Background.alpha == 0.7)
 assert(relationsPage.Background.alpha == 0.7)
@@ -493,6 +590,11 @@ assert(win.CloseButton:GetFrameLevel() == win:GetFrameLevel() + 1 and win.Resize
 assert(category.justify == "RIGHT" and category.points.TOPLEFT[1] == 27 and category.points.TOPLEFT[2] == -44)
 page:Show()
 toggle(nil, true)
+TRP3_InventoryPage:Show()
+opened()
+assert(slotFill:IsShown() and empty.bkg.alpha == 0 and not empty.textures.BACKGROUND2)
+assert(slotEdge:IsShown() and #empty.children == 1)
+CheckPanelInset(4)
 assert(scroll.ScrollBar:GetScale() == 0.7)
 CheckTab(0)
 CheckRow(true)

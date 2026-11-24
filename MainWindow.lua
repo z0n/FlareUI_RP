@@ -334,6 +334,93 @@ function ns.StartMainWindow(config, elements)
         bg:SetPoint("LEFT", menu.ScrollBar or menu, "RIGHT")
     end
 
+    -- Extended calls this after painting the current item's quality border.
+    -- Reuse that colour rather than interpreting Extended item classes ourselves.
+    local slotStyles = {}
+    local function PaintSlotBorder(slot)
+        if not enabled then return end
+        local profile = FlareUI and FlareUI.db and FlareUI.db.profile
+        local db = profile and profile.tweaks
+        local style, original = slotStyles[slot], slot.IconBorder
+        local heavy = db and db.bagThickBorders or false
+        local border = heavy and thick or thin
+        local edge = edges[slot]
+        if not border or (db and db.bagSkinSlots == false) then
+            if edge and edge:IsShown() then edge:Hide() end
+            if original and native[original] ~= nil then
+                original:SetAlpha(native[original])
+                native[original] = nil
+            end
+            return
+        end
+        if style.heavy ~= heavy then
+            local size, outset = heavy and 16 or 8, heavy and 2 or 3
+            if edge then edge:SetBackdrop({ edgeFile = border, edgeSize = size })
+            else edge = Edge(slot, size, border) end
+            edge:ClearAllPoints()
+            edge:SetPoint("TOPLEFT", slot.bkg, "TOPLEFT", -outset, outset)
+            edge:SetPoint("BOTTOMRIGHT", slot.bkg, "BOTTOMRIGHT", outset, -outset)
+            style.heavy, style.r = heavy, nil
+        end
+        local r, g, b = 0.65, 0.49, 0.27
+        if original then
+            if (not db or db.bagRarity ~= false) and original:IsShown() then r, g, b = original:GetVertexColor() end
+            Mute(original)
+        end
+        if style.r ~= r or style.g ~= g or style.b ~= b then
+            edge:SetBackdropBorderColor(r, g, b, 1)
+            style.r, style.g, style.b = r, g, b
+        end
+        if not edge:IsShown() then edge:Show() end
+    end
+
+    local inventoryFill, inventoryFillPoints
+    local function StyleInventoryPage(page)
+        local panel = page.Main
+        if not panel or panel:IsForbidden() then return end
+        if panel.Model and panel.InsetBorderLeft then
+            -- TRP3_InnerFrame gives its top and bottom textures the same key.
+            -- Both are on BORDER/-5; the dark fill is on BACKGROUND.
+            for _, region in ipairs({ panel:GetRegions() }) do
+                local layer, sublevel = region:GetDrawLayer()
+                if layer == "BORDER" and sublevel == -5 then
+                    Mute(region)
+                elseif layer == "BACKGROUND" and not inventoryFill and region:IsObjectType("Texture") then
+                    -- FlareUI's 8-unit Thin edge leaves the outer corners clear.
+                    inventoryFill, inventoryFillPoints = region, SavePoints(region)
+                    region:ClearAllPoints()
+                    region:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
+                    region:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 4)
+                end
+            end
+            Edge(panel, 8, thin)
+        end
+        local slots = panel.slots
+        if type(slots) ~= "table" then return end
+        local hasSlotArt = C_Texture and C_Texture.GetAtlasInfo("bags-item-slot64")
+        for _, slot in ipairs(slots) do
+            local bg = slot.bkg
+            if bg and not slot:IsForbidden() and not bg:IsForbidden() then
+                if hasSlotArt then
+                    if not fills[slot] then
+                        local fill = slot:CreateTexture(nil, "BACKGROUND", nil, -1)
+                        fill:SetAtlas("bags-item-slot64")
+                        fill:SetAllPoints(bg)
+                        fills[slot] = fill
+                    end
+                    Mute(bg)
+                    fills[slot]:Show()
+                end
+                -- Only replace Extended's border if we can follow item swaps.
+                if not slotStyles[slot] and type(slot.additionalOnUpdateHandler) == "function" then
+                    hooksecurefunc(slot, "additionalOnUpdateHandler", PaintSlotBorder)
+                    slotStyles[slot] = {}
+                end
+                if slotStyles[slot] then PaintSlotBorder(slot) end
+            end
+        end
+    end
+
     -- TRP3_ActionButton has no mixin. Match the released template's owners
     -- rather than the red texture sheet, which also contains the edit pencil.
     local menuFaces, watchedLists = {}, {}
@@ -350,6 +437,8 @@ function ns.StartMainWindow(config, elements)
             b = owner.Actions
         elseif HasMethod(owner, TRP3_ModuleManagerListElementMixin, "Init") then
             b = owner.Action
+        elseif TRP3_QuestLogPage and owner == TRP3_QuestLogPage.navBar then
+            b = owner.action
         elseif TRP3_RegisterCharact_Edit_CharactPanel_Container and owner:GetParent() == TRP3_RegisterCharact_Edit_CharactPanel_Container then
             b = owner.Action or owner.ActionButton
         end
@@ -420,6 +509,10 @@ function ns.StartMainWindow(config, elements)
             end
         elseif frame == TRP3_Dashboard then
             FitDashboard(frame.Background)
+        elseif frame == TRP3_InventoryPage then
+            StyleInventoryPage(frame)
+        elseif frame == TRP3_QuestLogPage then
+            PanelRim(frame)
         elseif frame == TRP3_RegisterCharact then
             PanelRim(frame)
         elseif HasMethod(frame, TRP3_GroupBoxMixin, "GetTitleWidth") and frame.Header and frame.Header.Text then
@@ -694,6 +787,10 @@ function ns.StartMainWindow(config, elements)
         if dashboardAnchors then
             RestorePoints(TRP3_Dashboard.Background, dashboardAnchors)
             dashboardAnchors = nil
+        end
+        if inventoryFill then
+            RestorePoints(inventoryFill, inventoryFillPoints)
+            inventoryFill, inventoryFillPoints = nil, nil
         end
         if panelClose then panelClose:Hide() end
         for state, tex in pairs(resizeArt) do
