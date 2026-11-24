@@ -43,6 +43,7 @@ TRP3_NameUtil = { GetQualifiedName = function() assert(not restricted and person
 AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
     local data = records[id] or {}
     return { GetFirstName = function() return data[1] end, GetFullName = function() return data[2] end,
+        GetLastName = function() return data[4] end,
         GetCustomColorForDisplay = function() if data[3] then return { GetRGB = function() return data[3], 0, 0 end } end end,
         GetCustomColor = function() if data[3] then return { GetRGB = function() return data[3] / 2, 0, 0 end } end end }
 end } }
@@ -69,6 +70,8 @@ paint(plate); check("12 Aster", 0.8)
 guild, plate.kind = true, "enemyPlayer"
 paint(plate); check("12 Aster", 0.8) -- guild setting applies only to friendly players
 guild, plate.tdb.guildColor = false, false
+records.A[4], plate.nameFull = "Moonfall", "lastname"
+paint(plate); check("12 Moonfall", 0.8)
 plate.nameFull = true
 paint(plate); check("12 Aster Moonfall", 0.8)
 handlers.flareui_rp_plate_names(nil, false); check("12 A", 0.8)
@@ -78,6 +81,8 @@ handlers.flareui_rp_plate_colours(nil, true)
 plate.nameOnly = false
 plate.aboveName = { SetText = plate.name.SetText, SetFormattedText = plate.name.SetFormattedText,
     SetTextColor = plate.name.SetTextColor, IsShown = function() return true end }
+plate.aboveKind = "lastname"
+paint(plate); assert(plate.aboveName.text == "12 Moonfall" and plate.name.text == "12 Aster Moonfall")
 plate.aboveKind = "firstname"
 paint(plate); assert(plate.aboveName.text == "12 Aster" and plate.name.text == "12 Aster Moonfall")
 records.A[3] = 0.6

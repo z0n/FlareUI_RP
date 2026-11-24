@@ -19,7 +19,8 @@ function canaccessallvalues() return not restricted end
 TRP3_NameUtil = { GetQualifiedName = function(unit) assert(not restricted and UnitIsPlayer(unit)); return UnitNameUnmodified(unit) end }
 AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(key)
     local p = records[key] or {}
-    return { GetFirstName = function() return p[1] end, GetFullName = function() return p[2] end, GetCustomColor = function() return nil end }
+    return { GetFirstName = function() return p[1] end, GetFullName = function() return p[2] end,
+        GetLastName = function() return p[3] end, GetCustomColor = function() return nil end }
 end } }
 FlareUI = { db = { profile = { unitframes = { units = layouts } } },
     NameAbove = { SetName = function() end, Get = function(db) if db and db.kind then return "middle", db.kind end end },
@@ -70,6 +71,15 @@ full = true
 afterName(target)
 assert(target.Name.text == "Lady Aster Moonfall")
 afterName(target, { kind = "firstname" })
+assert(target.NameAboveText.text == "Lady Aster")
+full, records.A[3] = "lastname", "Moonfall"
+afterName(target)
+assert(target.Name.text == "Moonfall" and target.NameAboveText.text == "Lady Aster Moonfall")
+full = true
+afterName(target, { kind = "lastname" })
+assert(target.Name.text == "Lady Aster Moonfall" and target.NameAboveText.text == "Moonfall")
+records.A[3] = ""
+afterName(target, { kind = "lastname" })
 assert(target.NameAboveText.text == "Lady Aster")
 target.NameAboveText.shown = false
 target.NameAboveText.text = "untouched"

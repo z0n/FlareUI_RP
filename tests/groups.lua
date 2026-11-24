@@ -18,6 +18,7 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
     lookups = lookups + 1
     local r = records[id] or {}
     return { GetFirstName = function() return r.first end, GetFullName = function() return r.full end,
+        GetLastName = function() return r.last end,
         GetCustomColor = function() if r.rgb then return { GetRGB = function() return r.rgb, 0, 0 end } end end }
 end } }
 TRP3_Addon = {}
@@ -103,6 +104,17 @@ assert(raid.Name.text == "Unknown" and raid.Health.red == 0.5)
 units.raid2 = "B"; raid.db.classColor = false
 draw(raid)
 assert(raid.Name.text == "Birch Winter" and raid.Health.red == 0.5)
+-- Released per-layout helper overrides the global full-name setting.
+function pf.NameFull(f) return f.format end
+FlareUI.NameAbove.Get = function(db) return "middle", db.above or "fullname" end
+party.format, raid.format, raid.db.above = "lastname", false, "lastname"
+records.A.last, records.B.last = "Moonfall", "Winter"
+draw(party); draw(raid)
+assert(party.Name.text == "Moonfall" and party.NameAboveText.text == "Aster Moonfall")
+assert(raid.Name.text == "Birch" and raid.NameAboveText.text == "Winter")
+raid.format = nil
+events.GROUP_ROSTER_UPDATE(); flush()
+assert(raid.Name.text == "Birch Winter" and raid.NameAboveText.text == "Winter")
 handlers.flareui_rp_party_names(nil, false); handlers.flareui_rp_party_health(nil, false)
 assert(party.Name.text == "A" and party.NameAboveText.text == "A" and party.Health.red == 0.5)
 assert(raid.Name.text == "Birch Winter")

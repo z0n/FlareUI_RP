@@ -26,8 +26,9 @@ end
 local function MemberName(f, unit, profile, restore)
     if not profile and not restore then return end
     local full
-    if pf.SlotOn(f) and not (pf.SlotStyle and pf.SlotStyle(f) == "partytile") then full = f.btFullName ~= false
-    else full = FlareUI.db.profile.unitframes.fullNames ~= false end
+    if pf.NameFull then full = pf.NameFull(f)
+    elseif pf.SlotOn(f) and not (pf.SlotStyle and pf.SlotStyle(f) == "partytile") then full = f.btFullName ~= false end
+    if full == nil then full = FlareUI.db.profile.unitframes.fullNames ~= false end
     PaintLabel(f.Name, unit, full, profile, restore)
 end
 
@@ -52,7 +53,7 @@ local function Paint(f, s)
         local nameProfile = opt.names and profile
         MemberName(f, unit, nameProfile, true)
         local pick = AboveKind(f)
-        if pick then PaintLabel(f.NameAboveText, unit, pick == "fullname", nameProfile, true) end
+        if pick then PaintLabel(f.NameAboveText, unit, ns.NameFormat(pick), nameProfile, true) end
         s.names = opt.names
     end
     if opt.health or s.applied then
@@ -145,7 +146,7 @@ function ns.StartGroupFrames(config, elements)
         if s and options[s.kind].names then
             local unit = Live(f)
             local pick = unit and AboveKind(f)
-            if pick then PaintLabel(f.NameAboveText, unit, pick == "fullname", ns.Profile(unit), false) end
+            if pick then PaintLabel(f.NameAboveText, unit, ns.NameFormat(pick), ns.Profile(unit), false) end
         end
     end)
     -- Either addon can finish login first. Attach to existing tiles too; the

@@ -12,13 +12,15 @@ If a FlareUI setting prevents RP health colours, a hint points you to the settin
 
 For manual installs from [GitHub Releases](https://github.com/z0n/FlareUI_RP/releases), download the **FlareUI_RP addon ZIP** under **Assets**, not GitHub’s automatic **Source code (zip)**. Extract it so `Interface/AddOns/FlareUI_RP/FlareUI_RP.toc` exists. If your addon manager supports GitHub sources and WoW: Forever, use `https://github.com/z0n/FlareUI_RP` as the source.
 
-**Unit frames:** Player, Target, Focus, Target of Target and Target of Focus share the **Show RP Names** switch. Each has its own RP health-colour switch. Enable **Look > Class Colours** on the corresponding FlareUI frame to use the player's profile colour. Low-health warnings and health gradients keep priority. RP names work independently and follow each label’s first/full-name choice. When the player’s identity is restricted or the unit is an NPC, FlareUI keeps its usual display.
+RP names follow each label’s **First Name**, **Last Name** or **Full Name** choice. If a profile has no surname, **Last Name** shows its RP first name. If neither is available, FlareUI shows the character’s usual name for that setting.
+
+**Unit frames:** Player, Target, Focus, Target of Target and Target of Focus share the **Show RP Names** switch. Each has its own RP health-colour switch. Enable **Look > Class Colours** on the corresponding FlareUI frame to use the player's profile colour. Low-health warnings and health gradients keep priority. When the player’s identity is restricted or the unit is an NPC, FlareUI keeps its usual display.
 
 **Party and raid:** Each has separate RP name and health-colour switches. In Edit Mode, select **Party** or **Raid** and enable **Look → Class Colours** to use RP health colours on member tiles. Party settings follow the active Classic or Raid Style; raid main-tank member tiles follow the raid settings. Pets, members’ targets and boss frames are unaffected.
 
 **Nameplates:** Choose **Class & Reaction** in FlareUI to use RP colours on player health fills. Reaction colours and health gradients stay as configured. RP colour replaces class-coloured text in **Name Only** mode and on full plates with **Colour Names by Class** enabled, including their above-plate names. Party, raid and guild name colours keep priority. NPCs keep their normal display.
 
-**Names Above Plate** uses its own first/full-name setting, even when no name is shown inside the bar.
+**Names Above Plate** uses its own name format, even when no name is shown inside the bar.
 
 ## Development
 

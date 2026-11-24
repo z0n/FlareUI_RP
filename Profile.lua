@@ -20,9 +20,18 @@ function ns.ProfileColor(profile)
     if color then return color:GetRGB() end
 end
 
+-- Match FlareUI's UnitDisplayName argument, including the surname-only pick.
+function ns.NameFormat(pick)
+    return pick == "lastname" and "lastname" or pick == "fullname"
+end
+
 function ns.ProfileName(profile, full)
     if not profile then return end
     local name
-    if full then name = profile:GetFullName() else name = profile:GetFirstName() end
+    if full == "lastname" then
+        name = profile:GetLastName()
+        if not name or name == "" then name = profile:GetFirstName() end
+    elseif full then name = profile:GetFullName()
+    else name = profile:GetFirstName() end
     if name and name ~= "" then return name end
 end

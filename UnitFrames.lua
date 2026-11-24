@@ -36,7 +36,7 @@ local function Paint(frame, settings, restoreNames)
     end
     local slot, kind = FlareUI.NameAbove.Get(settings)
     if not slot then return end
-    local aboveFull = kind == "fullname"
+    local aboveFull = ns.NameFormat(kind)
     if aboveFull ~= full then name = DisplayName(unit, aboveFull, rp) end
     above:SetText(name)
 end
@@ -116,7 +116,7 @@ end
 TRP3_API.RegisterCallback(TRP3_Addon, "WORKFLOW_ON_LOADED", function()
     local config = TRP3_API.configuration
     local elements = { { inherit = "TRP3_ConfigParagraph",
-        title = "RP names follow FlareUI's First Name or Full Name setting. RP colours replace class colours where FlareUI uses them. If a profile has no name or colour to use, FlareUI keeps its usual one." } }
+        title = "RP names follow FlareUI's First Name, Last Name or Full Name setting. RP colours replace class colours where FlareUI uses them. If a profile has no name or colour to use, FlareUI keeps its usual one." } }
     StartUnitFrames(config, elements)
     ns.StartGroupFrames(config, elements)
     ns.StartNameplates(config, elements)

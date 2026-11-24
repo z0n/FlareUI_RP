@@ -54,7 +54,7 @@ local function Paint(p)
     if names then
         local prefix = p.levelFollow and np.LevelPrefix(p.unit)
         if p.nameSlot then SetName(p.name, ns.ProfileName(profile, p.nameFull), prefix) end
-        if above then SetName(p.aboveName, ns.ProfileName(profile, p.aboveKind == "fullname"), prefix) end
+        if above then SetName(p.aboveName, ns.ProfileName(profile, ns.NameFormat(p.aboveKind)), prefix) end
     end
     local color = textColour and profile:GetCustomColorForDisplay()
     if color then
