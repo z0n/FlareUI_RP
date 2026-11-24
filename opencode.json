@@ -8,6 +8,10 @@
     "TotalRP3": {
       "path": "../Total-RP-3",
       "description": "Verify profile lookup, identity and callbacks against the latest public Forever release; report unreleased differences separately."
+    },
+    "TotalRP3Extended": {
+      "path": "../Total-RP-3-Extended",
+      "description": "Verify optional Extended integrations such as the Inventory and Quest Log against the latest public Forever release; report unreleased differences separately."
     }
   }
 }
