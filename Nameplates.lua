@@ -1,12 +1,6 @@
 local _, ns = ...
 local np, names, colours
 local seen = setmetatable({}, { __mode = "k" })
-local deferred = setmetatable({}, { __mode = "k" })
-
-local function ReadableBar(p)
-    -- FlareUI compares its previous colour with the incoming one.
-    return canaccessallvalues(p.barR, p.barG, p.barB)
-end
 
 -- Run after the host has restored this plate's current name and colour.
 -- Track the widget, never profile data by reusable nameplate token.
@@ -80,7 +74,8 @@ local function PaintBar(p)
     if not Live(p) then return end
     seen[p] = true
     if not colours or p.nameOnly or not p.tdb or p.tdb.healthColor ~= "class" or p.threatRGB then return end
-    if not ReadableBar(p) then return end
+    -- UpdateColor has just painted this unit. Leave a restricted host colour alone.
+    if not p.barKnown then return end
     local tapped, connected = UnitIsTapDenied(p.unit), UnitIsConnected(p.unit)
     if not canaccessallvalues(tapped, connected) or tapped or not connected then return end
     if p.tdb.colorFocus and p.gamePlate == C_NamePlate.GetNamePlateForUnit("focus") then return end
@@ -88,8 +83,8 @@ local function PaintBar(p)
     if r then np.BarColor(p, r, g, b) end
 end
 
-local function NeedsRefresh(p, unit, ids)
-    if not ids or deferred[p] then return true end
+local function NeedsRefresh(unit, ids)
+    if not ids then return true end
     -- Resolve at flush time: a plate may have changed units since the event.
     -- With no readable identity, let FlareUI restore its current display.
     local id = ns.CharacterID(unit)
@@ -101,24 +96,16 @@ local function Refresh(refreshBars, ids)
         local unit = Live(p)
         if not unit then
             seen[p] = nil
-            deferred[p] = nil
-        elseif NeedsRefresh(p, unit, ids) then
+        elseif NeedsRefresh(unit, ids) then
             np.UpdateName(p)
-            if (refreshBars or deferred[p]) and np.UpdateColor and np.BarColor then
-                if ReadableBar(p) then
-                    deferred[p] = nil
-                    np.UpdateColor(p)
-                else
-                    deferred[p] = true
-                end
-            end
+            if refreshBars and np.UpdateColor and np.BarColor then np.UpdateColor(p) end
         end
     end
 end
 
 local queued
 local function Queue(id)
-    if not (names or colours or next(deferred)) then return end
+    if not (names or colours) then return end
     local scheduled = queued ~= nil
     if not id then queued = true
     elseif queued ~= true then
@@ -129,7 +116,7 @@ local function Queue(id)
     C_Timer.After(0, function()
         local batch = queued
         queued = nil
-        if names or colours or next(deferred) then Refresh(colours, batch ~= true and batch or nil) end
+        if names or colours then Refresh(colours, batch ~= true and batch or nil) end
     end)
 end
 

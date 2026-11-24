@@ -1,6 +1,7 @@
 local ns, callbacks, handlers, values, elements = {}, {}, {}, {}, {}
 local queued, person, restricted = nil, "A", false
 local namesPainted, barsPainted = 0, 0
+local stockRed = 0.4
 local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() return false end },
     nameSlot = "left", levelFollow = true, nameFull = false, nameOnly = true, tdb = { healthColor = "class" }, name = {
         SetFormattedText = function(self, fmt, ...) self.text = fmt:format(...) end,
@@ -16,8 +17,13 @@ FlareUI = { Nameplates = { C = { NAME_LIFT = 0.6 }, LevelPrefix = function() ret
         p.aboveName:SetText(stock)
         p.aboveName:SetTextColor(p.name.red)
     end
-end, BarColor = function(p, r) assert(canaccessallvalues(p.barR, p.barG, p.barB)); p.fill = r end,
-UpdateColor = function(p) barsPainted = barsPainted + 1; p.fill = 0.4 end } }
+end, BarColor = function(p, r, g, b)
+    p.fill, p.barR, p.barG, p.barB = r, r, g, b
+    p.barKnown = canaccessvalue(r) and canaccessvalue(g) and canaccessvalue(b)
+end, UpdateColor = function(p)
+    barsPainted = barsPainted + 1
+    FlareUI.Nameplates.BarColor(p, stockRed, 0, 0)
+end } }
 local tapped
 local raid, guild
 function UnitIsInMyGuild() return guild end
@@ -37,10 +43,10 @@ local secret = {}
 function canaccessvalue(value) return value ~= secret end
 function canaccessallvalues(...)
     for i = 1, select("#", ...) do if select(i, ...) == secret then return false end end
-    return not restricted
+    return true
 end
 function UnitIsPlayer() return person ~= "Spider" end
-function UnitNameUnmodified() return person end
+function UnitNameUnmodified() return restricted and secret or person end
 TRP3_NameUtil = { GetQualifiedName = function() assert(not restricted and person ~= "Spider"); return person end }
 AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
     local data = records[id] or {}
@@ -108,10 +114,16 @@ plate.tdb.groupColor = true
 paint(plate); check("12 Aster Moonfall", 0.5); assert(plate.aboveName.red == 0.5) -- group colour wins
 plate.tdb.groupColor, plate.tdb.nameClassColor = false, false
 paint(plate); check("12 Aster Moonfall", 0.5) -- default full-plate text stays stock
-plate.barG = secret
-bar(plate); assert(plate.fill == 0.4) -- host repaint stands, no extra cache comparison
-plate.barG = nil
-bar(plate); assert(plate.fill == 0.3)
+local function flush() local fn = assert(queued); queued = nil; fn() end
+stockRed = secret
+bar(plate); assert(plate.fill == secret, "a currently restricted host colour must stand")
+stockRed = 0.4
+callbacks.REGISTER_DATA_UPDATED(nil, "A"); flush()
+assert(plate.fill == 0.3, "a previously restricted colour must not delay an RP update")
+restricted = true
+callbacks.REGISTER_DATA_UPDATED(nil, "A"); flush()
+assert(plate.fill == 0.4, "an unreadable identity must restore the host colour")
+restricted = false
 for _, mode in ipairs({ "reaction", "off" }) do
     plate.tdb.healthColor = mode; bar(plate); assert(plate.fill == 0.4)
 end
@@ -137,7 +149,6 @@ paint(plate); bar(plate); check("12 Aster Moonfall", 0.6); assert(plate.fill == 
 person = "Spider"; paint(plate); check("12 Spider", 0.5)
 person = "B"; paint(plate); check("12 B", 0.5)
 records.B = { "Birch", "Birch Winter", 0 }
-local function flush() local fn = assert(queued); queued = nil; fn() end
 local n, b = namesPainted, barsPainted
 callbacks.REGISTER_DATA_UPDATED(nil, "A"); flush()
 assert(namesPainted == n and barsPainted == b, "unrelated character must not repaint the plate")
