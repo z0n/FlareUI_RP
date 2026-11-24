@@ -1,5 +1,6 @@
 local ns, callbacks, handlers, values, elements = {}, {}, {}, {}, {}
 local queued, person, restricted = nil, "A", false
+local namesPainted, barsPainted = 0, 0
 local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() return false end },
     nameSlot = "left", levelFollow = true, nameFull = false, nameOnly = true, tdb = { healthColor = "class" }, name = {
         SetFormattedText = function(self, fmt, ...) self.text = fmt:format(...) end,
@@ -7,6 +8,7 @@ local plate = { unit = "nameplate1", gamePlate = { IsForbidden = function() retu
         SetTextColor = function(self, r, g, b) self.red, self.green, self.blue = r, g, b end,
     } }
 FlareUI = { Nameplates = { C = { NAME_LIFT = 0.6 }, LevelPrefix = function() return "12 " end, UpdateName = function(p)
+    namesPainted = namesPainted + 1
     local stock = (p.levelFollow and "12 " or "") .. person
     if p.nameSlot then p.name:SetText(stock) end
     p.name:SetTextColor(0.5)
@@ -15,7 +17,7 @@ FlareUI = { Nameplates = { C = { NAME_LIFT = 0.6 }, LevelPrefix = function() ret
         p.aboveName:SetTextColor(p.name.red)
     end
 end, BarColor = function(p, r) assert(canaccessallvalues(p.barR, p.barG, p.barB)); p.fill = r end,
-UpdateColor = function(p) p.fill = 0.4 end } }
+UpdateColor = function(p) barsPainted = barsPainted + 1; p.fill = 0.4 end } }
 local tapped
 local raid, guild
 function UnitIsInMyGuild() return guild end
@@ -135,8 +137,21 @@ paint(plate); bar(plate); check("12 Aster Moonfall", 0.6); assert(plate.fill == 
 person = "Spider"; paint(plate); check("12 Spider", 0.5)
 person = "B"; paint(plate); check("12 B", 0.5)
 records.B = { "Birch", "Birch Winter", 0 }
-callbacks.REGISTER_DATA_UPDATED(); callbacks.REGISTER_PROFILES_LOADED()
+local function flush() local fn = assert(queued); queued = nil; fn() end
+local n, b = namesPainted, barsPainted
+callbacks.REGISTER_DATA_UPDATED(nil, "A"); flush()
+assert(namesPainted == n and barsPainted == b, "unrelated character must not repaint the plate")
+callbacks.REGISTER_DATA_UPDATED(nil, "B")
+callbacks.REGISTER_DATA_UPDATED(nil, "A"); flush()
+check("12 Birch Winter", 0)
+assert(namesPainted == n + 1 and barsPainted == b + 1, "batched character updates repaint once")
+callbacks.REGISTER_DATA_UPDATED(nil, "B")
+person = "A"; flush()
+assert(namesPainted == n + 1, "recycled plate must be matched using its current identity")
+person = "B"
+callbacks.REGISTER_DATA_UPDATED(nil, "A"); callbacks.REGISTER_PROFILES_LOADED()
 local fn = queued; queued = nil; fn(); check("12 Birch Winter", 0)
+assert(namesPainted == n + 2, "broad event must supersede queued IDs")
 restricted = true; paint(plate); check("12 B", 0.5)
 restricted = false
 records.B[3] = nil

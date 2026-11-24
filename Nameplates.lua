@@ -88,9 +88,21 @@ local function PaintBar(p)
     if r then np.BarColor(p, r, g, b) end
 end
 
-local function Refresh(refreshBars)
+local function NeedsRefresh(p, unit, ids)
+    if not ids or deferred[p] then return true end
+    -- Resolve at flush time: a plate may have changed units since the event.
+    -- With no readable identity, let FlareUI restore its current display.
+    local id = ns.CharacterID(unit)
+    return not id or ids[id]
+end
+
+local function Refresh(refreshBars, ids)
     for p in pairs(seen) do
-        if Live(p) then
+        local unit = Live(p)
+        if not unit then
+            seen[p] = nil
+            deferred[p] = nil
+        elseif NeedsRefresh(p, unit, ids) then
             np.UpdateName(p)
             if (refreshBars or deferred[p]) and np.UpdateColor and np.BarColor then
                 if ReadableBar(p) then
@@ -100,20 +112,24 @@ local function Refresh(refreshBars)
                     deferred[p] = true
                 end
             end
-        else
-            seen[p] = nil
-            deferred[p] = nil
         end
     end
 end
 
 local queued
-local function Queue()
-    if queued or not (names or colours or next(deferred)) then return end
-    queued = true
+local function Queue(id)
+    if not (names or colours or next(deferred)) then return end
+    local scheduled = queued ~= nil
+    if not id then queued = true
+    elseif queued ~= true then
+        queued = queued or {}
+        queued[id] = true
+    end
+    if scheduled then return end
     C_Timer.After(0, function()
+        local batch = queued
         queued = nil
-        if names or colours or next(deferred) then Refresh(colours) end
+        if names or colours or next(deferred) then Refresh(colours, batch ~= true and batch or nil) end
     end)
 end
 
@@ -135,11 +151,15 @@ function ns.StartNameplates(config, elements)
         help = "Use RP colours instead of class colours on health bars and names. For names on full plates, enable FlareUI's Colour Names by Class. Party, raid and guild name colours keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
-    for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
-        TRP3_API.RegisterCallback(TRP3_Addon, event, Queue)
+    TRP3_API.RegisterCallback(TRP3_Addon, "REGISTER_DATA_UPDATED", function(_, id)
+        if canaccessvalue(id) and type(id) == "string" and id ~= "" then Queue(id) else Queue() end
+    end)
+    local function QueueAll() Queue() end
+    for _, event in ipairs({ "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do
+        TRP3_API.RegisterCallback(TRP3_Addon, event, QueueAll)
     end
     TRP3_API.RegisterCallback(TRP3_Addon, "CONFIGURATION_CHANGED", function(_, key)
         if colours and key == "color_contrast_level" then Queue() end
     end)
-    TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", Queue)
+    TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", QueueAll)
 end
