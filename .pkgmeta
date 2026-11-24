@@ -5,6 +5,8 @@ manual-changelog:
   markup-type: markdown
 
 ignore:
+  - .opencode
+  - DEPENDENCIES.md
   - .github
   - AGENTS.md
   - README.md

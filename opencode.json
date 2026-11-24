@@ -3,15 +3,15 @@
   "references": {
     "FlareUI": {
       "path": "../FlareUI",
-      "description": "Use the latest public Forever release for unit-frame and nameplate behaviour; compare upstream main only to identify unreleased changes."
+      "description": "Read unit-frame and nameplate behaviour at the tag in DEPENDENCIES.md."
     },
     "TotalRP3": {
       "path": "../Total-RP-3",
-      "description": "Verify profile lookup, identity and callbacks against the latest public Forever release; report unreleased differences separately."
+      "description": "Read profile lookup, identity and callbacks at the tag in DEPENDENCIES.md."
     },
     "TotalRP3Extended": {
       "path": "../Total-RP-3-Extended",
-      "description": "Verify optional Extended integrations such as the Inventory and Quest Log against the latest public Forever release; report unreleased differences separately."
+      "description": "Read optional Inventory and Quest Log integrations at the tag in DEPENDENCIES.md."
     }
   }
 }

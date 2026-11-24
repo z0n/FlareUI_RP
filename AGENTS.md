@@ -2,8 +2,8 @@
 
 ## Workflow
 
-1. **Check dependencies.** Fetch tags and the upstream default branches in `../FlareUI` and `../Total-RP-3`. Verify the latest public Forever releases of [FlareUI](https://github.com/malkkav/FlareUI/releases) and [TRP3](https://github.com/Total-RP/Total-RP-3/releases). Read the released source with `git show <release>:<path>` without changing either checkout. Report the versions and briefly summarise any unreleased changes and their relevance; don’t depend on them.
-2. **Implement and verify** the feature against those releases. Leave changes uncommitted unless asked.
+1. **Use the recorded baseline.** For dependency-facing work, consult [DEPENDENCIES.md](DEPENDENCIES.md) and read the relevant tagged source locally with `git show <tag>:<path>`. Routine questions and changes need no upstream fetch or version report. Use `@dependency-audit` when the maintainer requests an update check.
+2. **Implement and verify** against that baseline. For dependency-facing changes, update its verification record with the change, checks performed and any in-game results. Leave changes uncommitted unless asked.
 3. **When asked to prepare a release,** review changes since the last tag, update `CHANGELOG.md` and `## Version` in `FlareUI_RP.toc`, and run `./tools/check`. Keep only the current release in `CHANGELOG.md`; move previous entries to `CHANGELOG-history.md`, newest first. The packager uses the entire `CHANGELOG.md` as the release description. Give the maintainer the exact Git commands to tag the release commit and push the branch and tag together; pushing the tag publishes the addon.
 4. **Check the CurseForge description** against the release. If it’s still accurate, say so. If it’s stale, provide a concise, paste-ready Markdown replacement. If you can’t read the live description, ask for its current text.
 
