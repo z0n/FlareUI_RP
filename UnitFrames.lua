@@ -120,6 +120,7 @@ TRP3_API.RegisterCallback(TRP3_Addon, "WORKFLOW_ON_LOADED", function()
     StartUnitFrames(config, elements)
     ns.StartGroupFrames(config, elements)
     ns.StartNameplates(config, elements)
+    ns.StartToolbar(config, elements)
     local watchHints = ns.AddSetupHints(elements)
     -- TRP3 orders settings by menu ID, not by the displayed (localized) label.
     local page = { id = "main_config_flareui_rp", menuText = "FlareUI RP", pageText = "FlareUI RP", elements = elements }

@@ -5,10 +5,12 @@ FlareUI RP displays Total RP 3 names and colours on FlareUI’s player, target, 
 ## Install and configure
 
 1. Install **FlareUI RP**, [FlareUI](https://www.curseforge.com/wow/addons/flareui), and [Total RP 3](https://www.curseforge.com/wow/addons/total-rp-3). For a manual install, place `FlareUI_RP` inside `Interface/AddOns`.
-2. Enable **Unit Frames**, **Nameplates**, or both in FlareUI.
-3. Open **Total RP 3 → Settings → FlareUI RP**. Options are on by default and can be changed independently without a reload.
+2. For RP names and colours, enable **Unit Frames**, **Nameplates**, or both in FlareUI.
+3. Open **Total RP 3 > Settings > FlareUI RP**. RP names and colours are on by default and can be changed independently without a reload.
 
 If a FlareUI setting prevents RP health colours, a hint points you to the setting to change.
+
+**Total RP 3 toolbar:** Toolbar styling is on by default. The default **Quest Tracker** window style puts the title and buttons inside one rectangular frame, with a full-width decorated header and matching bottom edge. Hiding the title leaves the frame around the buttons. Under **Window Style**, you can also choose Thick, Thin or Frames. Buttons use FlareUI’s action-bar border in every style, independently of FlareUI’s action-bar settings. Turn off **Skin Total RP 3 Toolbar** to restore TRP3’s appearance immediately. TRP3’s toolbar settings still control the title, button size, layout and visibility.
 
 For manual installs from [GitHub Releases](https://github.com/z0n/FlareUI_RP/releases), download the **FlareUI_RP addon ZIP** under **Assets**, not GitHub’s automatic **Source code (zip)**. Extract it so `Interface/AddOns/FlareUI_RP/FlareUI_RP.toc` exists. If your addon manager supports GitHub sources and WoW: Forever, use `https://github.com/z0n/FlareUI_RP` as the source.
 

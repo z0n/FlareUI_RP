@@ -9,4 +9,5 @@ UnitHealth.lua
 Nameplates.lua
 GroupFrames.lua
 SetupHints.lua
+Toolbar.lua
 UnitFrames.lua

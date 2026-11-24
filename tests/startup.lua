@@ -13,7 +13,7 @@ local function run(hasNames, hasPlates)
             registerHandler = noop, registerConfigurationPage = function(p) page = p end } }
     C_Timer = { After = noop }
     function hooksecurefunc(_, key) hooks[key] = true end
-    for _, file in ipairs({ "UnitHealth.lua", "Nameplates.lua", "GroupFrames.lua", "SetupHints.lua", "UnitFrames.lua" }) do
+    for _, file in ipairs({ "UnitHealth.lua", "Nameplates.lua", "GroupFrames.lua", "SetupHints.lua", "Toolbar.lua", "UnitFrames.lua" }) do
         assert(loadfile(file))("FlareUI_RP", ns)
     end
     events.WORKFLOW_ON_LOADED()
