@@ -23,7 +23,10 @@ end
 local t, g, n = checkbox("target_health"), checkbox("party_health"), checkbox("plate_colours")
 local gl, gc = checkbox("plate_guilds"), checkbox("plate_guild_colours")
 local titles = checkbox("plate_titles")
-values[titles.configKey], values[gl.configKey], values[gc.configKey] = false, false, false
+titles.inherit = "TRP3_ConfigDropDown"
+local onTitleChange
+TRP3_API.configuration.registerHandler = function(key, fn) assert(key == titles.configKey); onTitleChange = fn end
+values[titles.configKey], values[gl.configKey], values[gc.configKey] = "none", false, false
 local elements = { t, g, n, gl, gc, titles }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
@@ -131,7 +134,7 @@ FlareUI_SettingsPanel:OnHide(); assert(not note.shown)
 hints[gl].OnClick(); close:OnClick(); assert(not note.shown)
 local titleHint = hints[titles].widget
 assert(not titleHint.Title.shown)
-values[titles.configKey] = true; titles.OnClick()
+values[titles.configKey] = "short"; onTitleChange()
 assert(titleHint.Title.shown and titleHint.Title.text:find("Show Titles"))
 plates.friendlyPlayer.showTitles = true; titleHint.OnShow(); assert(not titleHint.Title.shown)
 assert(labelHint.Title.text:find("Show Guild Name") and colourHint.Title.text:find("Colour Guild Members"))

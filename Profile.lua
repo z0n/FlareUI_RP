@@ -32,8 +32,10 @@ function ns.ProfileGuild(profile)
     return Trimmed(membership and membership.name)
 end
 
-function ns.ProfileTitle(profile)
-    return Trimmed(profile and profile.GetFullTitle and profile:GetFullTitle())
+function ns.ProfileTitle(profile, mode)
+    if not profile then return end
+    if mode == "short" then return Trimmed(profile.GetTitle and profile:GetTitle()) end
+    if mode == "full" then return Trimmed(profile.GetFullTitle and profile:GetFullTitle()) end
 end
 
 function ns.SharesProfileGuild(profile)

@@ -176,7 +176,9 @@ end
 local function Hint(elements, index, checks, diagnose, option)
     local row = { inherit = "TRP3_ConfigButton", marginLeft = option and option.marginLeft }
     local function State()
-        if not option or TRP3_API.configuration.getValue(option.configKey) then return diagnose() end
+        if not option then return diagnose() end
+        local value = TRP3_API.configuration.getValue(option.configKey)
+        if value and value ~= "none" then return diagnose() end
     end
     local lastMessage
     local function Refresh(checkOnly)
@@ -232,7 +234,9 @@ local function Hint(elements, index, checks, diagnose, option)
         w:SetScript("OnEvent", Refresh)
         Refresh()
     end
-    if option then option.OnClick = Refresh end
+    if option and option.inherit == "TRP3_ConfigDropDown" then
+        TRP3_API.configuration.registerHandler(option.configKey, function() Refresh() end)
+    elseif option then option.OnClick = Refresh end
     checks[#checks + 1] = function() Refresh(true) end
     table.insert(elements, index, row)
 end

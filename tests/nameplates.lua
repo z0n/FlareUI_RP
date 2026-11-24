@@ -74,6 +74,7 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
         GetLastName = function() return data[4] end,
         GetCustomGuildMembership = function() return { name = data.guild } end,
         GetFullTitle = function() return data.title end,
+        GetTitle = function() return data.shortTitle end,
         GetCustomColorForDisplay = function() if data[3] then return { GetRGB = function() return data[3], 0, 0 end } end end,
         GetCustomColor = function() if data[3] then return { GetRGB = function() return data[3] / 2, 0, 0 end } end end }
 end } }
@@ -245,14 +246,17 @@ records.B.title = "  Keeper of the Watch  "
 handlers.flareui_rp_plate_guilds(nil, true)
 local updateTitle = FlareUI.Nameplates.UpdateTitle
 updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
-handlers.flareui_rp_plate_titles(nil, true)
+handlers.flareui_rp_plate_titles(nil, "full")
 assert(plate.npcTitle.text == "Keeper of the Watch" and label.anchor == plate.npcTitle)
 gameTitle = secret; updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
 gameTitle = "Corporal"; records.B.title = " "
 callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush(); assert(plate.npcTitle.text == "Corporal")
 records.B.title = "Keeper"; plate.tdb.showTitles = false; updateTitle(plate); assert(not plate.npcTitle.shown)
 plate.tdb.showTitles = true; updateTitle(plate); assert(plate.npcTitle.text == "Keeper")
-handlers.flareui_rp_plate_titles(nil, false); assert(plate.npcTitle.text == "Corporal")
+handlers.flareui_rp_plate_titles(nil, "short"); assert(plate.npcTitle.text == "Corporal")
+records.B.shortTitle = "Dame"; callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
+assert(plate.npcTitle.text == "Dame")
+handlers.flareui_rp_plate_titles(nil, "none"); assert(plate.npcTitle.text == "Corporal")
 plate.gamePlate, plate.unit = nil, nil
 callbacks.REGISTER_PROFILE_DELETED(); queued()
 print("PASS: player plate names, display colour, independent settings, prefix, recycled plates and late updates")

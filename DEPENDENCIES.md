@@ -12,7 +12,7 @@ Verification for the 7.0.13 adoption:
 
 Custom guild label verification:
 
-RP title verification: FlareUI’s tagged `NP.UpdateTitle` paints `UpdateTitleLine` before positioning the guild. TRP3’s nameplate module reads `Player:GetFullTitle()` for that line. Mock checks cover opt-in behaviour, setup hints, guild placement, restricted titles and stock fallback. Not verified in game.
+RP title verification: FlareUI’s tagged `NP.UpdateTitle` paints `UpdateTitleLine` before positioning the guild. TRP3’s `Player:GetTitle()` and `Player:GetFullTitle()` read independent Characteristics fields (`TI` and `FT`). Mock checks cover switching fields, opt-in hints, guild placement, restricted titles and stock fallback. Not verified in game.
 
 - FlareUI `Modules/Nameplates.lua`: `NP.UpdateGuild` owns the friendly/enemy Name Only guild label. `Modules/Tooltips.lua` separately hides Blizzard’s guild line or adds its rank. TRP3 already has custom guild and rank controls for its tooltip.
 - TRP3 `Core/Player.lua`: `Player:GetCustomGuildMembership().name` reads the Characteristics guild-name field independently of in-game membership.

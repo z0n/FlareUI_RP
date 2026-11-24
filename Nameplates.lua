@@ -101,7 +101,7 @@ local function PaintTitle(p)
     if not (titles and label and p.nameOnly and p.tdb and p.tdb.showTitles) then return end
     if p.kind ~= "friendlyPlayer" and p.kind ~= "enemyPlayer" then return end
     if not label:IsShown() and UnitPVPName and not canaccessvalue((UnitPVPName(p.unit))) then return end
-    local title = ns.ProfileTitle(ns.Profile(p.unit))
+    local title = ns.ProfileTitle(ns.Profile(p.unit), titles)
     if not title then return end
     label:SetText(title)
     if not label:IsShown() then
@@ -186,11 +186,14 @@ function ns.StartNameplates(config, elements)
     hooksecurefunc(np, "UpdateName", Paint)
     if np.UpdateTitleLine and np.UpdateTitle then
         local key = "flareui_rp_plate_titles"
-        config.registerConfigKey(key, false)
-        titles = config.getValue(key)
-        config.registerHandler(key, function(_, on) titles = on; Refresh(false, nil, true) end)
-        elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = "Use RP Titles",
-            help = "Use the profile's Full title on Name Only player plates with Show Titles enabled. An empty Full title keeps FlareUI's normal title." }
+        config.registerConfigKey(key, "none")
+        local mode = config.getValue(key)
+        titles = mode ~= "none" and mode
+        config.registerHandler(key, function(_, value) titles = value ~= "none" and value; Refresh(false, nil, true) end)
+        elements[#elements + 1] = { inherit = "TRP3_ConfigDropDown", configKey = key, title = "RP Titles",
+            widgetName = "FlareUI_RP_ConfigPlateTitles",
+            listContent = { { "No RP titles", "none" }, { "Short title", "short" }, { "Full title", "full" } },
+            help = "Choose which profile title to show on Name Only player plates with Show Titles enabled. No RP titles or an empty selected field keeps FlareUI's normal title." }
         -- The host anchors the guild immediately after painting this title line.
         hooksecurefunc(np, "UpdateTitleLine", PaintTitle)
     end
