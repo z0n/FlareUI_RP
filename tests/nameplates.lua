@@ -202,6 +202,8 @@ local paintGuild = FlareUI.Nameplates.UpdateGuild
 handlers.flareui_rp_plate_names(nil, false)
 handlers.flareui_rp_plate_colours(nil, false)
 records.B = { guild = "  Night Watch  " }
+paintGuild(plate); assert(not label.shown, "RP guild names are opt-in")
+handlers.flareui_rp_plate_guilds(nil, true)
 callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
 assert(label.shown and label.text == "<Night Watch>" and label.anchor == plate.name)
 plate.npcTitle = { IsShown = function() return true end }

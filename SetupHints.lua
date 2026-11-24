@@ -32,7 +32,7 @@ local function FrameHint(unit)
     if gradient then
         fix = fix .. (classOff and " and " or "") .. "change Tint Health from By Health to Off or On Low Health"
     end
-    return "In Edit Mode, select " .. label .. " and " .. fix .. " to use RP health colours.", "edit", unit
+    return "For RP health colours, select " .. label .. " in Edit Mode and " .. fix .. ".", "edit", unit, "info"
 end
 
 local function ActiveNameplates()
@@ -90,13 +90,13 @@ local function PlateHint()
     local blocked = {}
     for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
         local db = np.TypeDB(kind)
-        if db and db.plate and db.plate ~= "name" and db.healthColor and db.healthColor ~= "class" then
+        if db and db.plate and db.plate ~= "name" and db.plate ~= "hidden" and db.healthColor and db.healthColor ~= "class" then
             blocked[#blocked + 1] = kind == "friendlyPlayer" and "Friendly Player" or "Enemy Player"
         end
     end
     if #blocked > 0 then
         return "For RP health bars, select " .. table.concat(blocked, " and ") ..
-            " in Plate Setup and choose Style > Look > Colour By > Class & Reaction.", "np", "style"
+            " in Plate Setup and choose Style > Look > Colour By > Class & Reaction.", "np", "style", "info"
     end
 end
 
@@ -113,14 +113,17 @@ local function Destination(action, target)
 end
 
 -- A reminder of the clicked instruction, independent of the hidden TRP3 page.
-local note, noteText, owner
+local note, noteTitle, noteText, owner
+local function HintText(text, tone)
+    return tone == "info" and text or "|A:services-icon-warning:14:14|a " .. text
+end
 local watched = {}
 local NOTE_WIDTH, NOTE_PAD, TEXT_TOP = 380, 18, 44
 local function FitNote()
     note:SetHeight(TEXT_TOP + math.ceil(noteText:GetStringHeight()) + NOTE_PAD)
 end
 
-local function PinHint(message, destination)
+local function PinHint(message, destination, tone)
     if not note then
         note = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
         note:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 24, -64)
@@ -143,9 +146,8 @@ local function PinHint(message, destination)
         note:SetScript("OnDragStart", note.StartMoving)
         note:SetScript("OnDragStop", function(self) self:StopMovingOrSizing(); FitNote() end)
         note:SetScript("OnHide", function(self) self:StopMovingOrSizing(); owner = nil end)
-        local title = note:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        title:SetPoint("TOPLEFT", NOTE_PAD, -14)
-        title:SetText("|A:services-icon-warning:14:14|a FlareUI RP")
+        noteTitle = note:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        noteTitle:SetPoint("TOPLEFT", NOTE_PAD, -14)
         local close = CreateFrame("Button", nil, note, "UIPanelCloseButton")
         close:SetPoint("TOPRIGHT", -4, -4)
         close:SetScript("OnClick", function() note:Hide() end)
@@ -163,6 +165,7 @@ local function PinHint(message, destination)
         watched[owner] = true
         owner:HookScript("OnHide", function(self) if owner == self then note:Hide() end end)
     end
+    noteTitle:SetText(HintText("FlareUI RP", tone))
     noteText:SetText(message)
     note:Show()
     FitNote()
@@ -179,7 +182,7 @@ local function Hint(elements, index, checks, diagnose, option)
     local function Refresh(checkOnly)
         local w = row.widget
         if not w or not w:IsVisible() then return end
-        local message, action, target = State()
+        local message, action, target, tone = State()
         if checkOnly == true and message == lastMessage then return end
         lastMessage = message
         if not message then
@@ -188,9 +191,9 @@ local function Hint(elements, index, checks, diagnose, option)
             w:SetHeight(1)
             return
         end
-        local text, enabled = Destination(action, target)
-        w.Title:SetText("|A:services-icon-warning:14:14|a " .. message)
+        w.Title:SetText(HintText(message, tone))
         w.Title:Show()
+        local text, enabled = Destination(action, target)
         w.Button:SetText(text)
         w.Button:SetWidth(w.Button:GetTextWidth() + 28)
         w.Button:SetEnabled(not not enabled)
@@ -198,14 +201,12 @@ local function Hint(elements, index, checks, diagnose, option)
         w:SetHeight(w.Title:GetStringHeight() + 36)
     end
     row.OnClick = function()
-        local message, action, target = State()
-        if message then
+        local message, action, target, tone = State()
+        if action then
             local _, enabled, open = Destination(action, target)
             if enabled and open() then
                 TRP3_MainFrame:Hide()
-                local destination
-                if action == "edit" then destination = EditModeManagerFrame else destination = FlareUI_SettingsPanel end
-                PinHint(message, destination)
+                PinHint(message, action == "edit" and EditModeManagerFrame or FlareUI_SettingsPanel, tone)
                 return
             end
         end

@@ -196,7 +196,7 @@ function ns.StartNameplates(config, elements)
     end
     if np.UpdateGuild then
         local guildKey = "flareui_rp_plate_guilds"
-        config.registerConfigKey(guildKey, true)
+        config.registerConfigKey(guildKey, false)
         guilds = config.getValue(guildKey)
         config.registerHandler(guildKey, function(_, on) guilds = on; Refresh(false) end)
         elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = guildKey, title = "Use RP Guild Names",

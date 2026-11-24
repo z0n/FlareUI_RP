@@ -23,7 +23,7 @@ end
 local t, g, n = checkbox("target_health"), checkbox("party_health"), checkbox("plate_colours")
 local gl, gc = checkbox("plate_guilds"), checkbox("plate_guild_colours")
 local titles = checkbox("plate_titles")
-values[titles.configKey] = false
+values[titles.configKey], values[gl.configKey], values[gc.configKey] = false, false, false
 local elements = { t, g, n, gl, gc, titles }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
@@ -79,28 +79,20 @@ C_Timer = { NewTicker = function(_, fn)
     return { Cancel = function() tick = nil end }
 end }
 watchHints(page)
-assert(w.Title.text:find("Class Colours") and w.Title.text:find("Tint Health") and w.Button.enabled)
-combat = true
-w.OnEvent()
+assert(w.Title.text:find("Class Colours") and w.Title.text:find("Tint Health"))
+assert(not w.Title.text:find("warning") and w.Button.shown and w.Button.text == "Edit Target Frame")
+combat = true; w.OnEvent()
 row.OnClick()
-assert(not opened and not hidden and not w.Button.enabled and not note)
-combat = false
-w.OnEvent()
-row.OnClick()
-assert(opened[1] == FlareUI_UF_Target and opened[2] == "uf" and hidden and not target.classColor)
-assert(note.shown and body.text:find("Tint Health"))
-local taller = note.height + 40
-body.GetStringHeight = function() return taller end
-note:OnDragStop()
-assert(note.height > taller, "after dragging, the frame must contain the wrapped body plus padding")
-EditModeManagerFrame:OnHide()
-assert(not note.shown)
+assert(not w.Button.enabled and not opened and not hidden and not note)
+combat = false; w.OnEvent(); row.OnClick()
+assert(opened[1] == FlareUI_UF_Target and opened[2] == "uf" and note.shown)
+EditModeManagerFrame:OnHide(); assert(not note.shown)
 target.classColor, target.healthColor = true, "low"
 tick()
 assert(not w.Button.shown and w.height == 1)
 target.classColor = false
 tick()
-assert(w.Button.shown and w.Title.text:find("Class Colours"))
+assert(w.Title.shown and w.Title.text:find("Class Colours") and w.Button.shown)
 page.OnHide()
 assert(not tick)
 page.OnShow()
@@ -109,30 +101,34 @@ assert(tick)
 page.IsVisible = function() return false end
 target.classColor = true
 tick()
-assert(not tick and w.Button.shown, "hidden page must cancel before refreshing hints")
+assert(not tick and w.Title.shown, "hidden page must cancel before refreshing hints")
 assert(not hints[g].widget.Button.shown)
 party.style = "classic"
 hints[g].widget.OnShow()
-assert(hints[g].widget.Button.shown)
+assert(hints[g].widget.Button.shown and hints[g].widget.Button.text == "Edit Party Frame")
 values[g.configKey] = false
 g.OnClick()
 assert(not hints[g].widget.Title.shown)
 local plate = hints[n]
 assert(plate.widget.Title.text:find("Enemy Player") and not plate.widget.Title.text:find("Friendly Player"))
-plate.OnClick()
-assert(opened[1] == "np" and opened[2] == "style")
-assert(note.shown and body.text:find("Enemy Player"))
-EditModeManagerFrame:OnHide()
-assert(note.shown)
-FlareUI_SettingsPanel:OnHide()
-assert(not note.shown)
-plate.OnClick()
-close:OnClick()
-assert(not note.shown)
+assert(not plate.widget.Title.text:find("warning") and plate.widget.Button.text == "Open Nameplate Settings")
+plate.OnClick(); assert(opened[1] == "np" and opened[2] == "style" and note.shown)
+FlareUI_SettingsPanel:OnHide(); assert(not note.shown)
 plates.enemyPlayer.healthColor = "class"
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
 local labelHint, colourHint = hints[gl].widget, hints[gc].widget
+assert(not labelHint.Title.shown and not colourHint.Title.shown)
+values[gl.configKey], values[gc.configKey] = true, true
+gl.OnClick(); gc.OnClick()
+hints[gl].OnClick()
+assert(opened[1] == "np" and opened[2] == "style" and hidden and body.text:find("Show Guild Name"))
+local taller = note.height + 40
+body.GetStringHeight = function() return taller end
+note:OnDragStop()
+assert(note.height > taller, "after dragging, the frame must contain the wrapped body plus padding")
+FlareUI_SettingsPanel:OnHide(); assert(not note.shown)
+hints[gl].OnClick(); close:OnClick(); assert(not note.shown)
 local titleHint = hints[titles].widget
 assert(not titleHint.Title.shown)
 values[titles.configKey] = true; titles.OnClick()
@@ -175,4 +171,4 @@ assert(module.widget.Title.shown and not elements[1].widget.Title.shown)
 FlareUI.SettingsPanel = nil
 module.widget.OnShow()
 assert(not module.widget.Button.enabled)
-print("PASS: contextual setup hints, targeted shortcuts, combat guard and rechecks")
+print("PASS: inline colour help, opt-in setup hints, targeted shortcuts and rechecks")

@@ -6,7 +6,7 @@ FlareUI RP brings Total RP 3 names and colours to FlareUI frames and nameplates 
 
 1. Install FlareUI RP alongside [FlareUI](https://www.curseforge.com/wow/addons/flareui) and [Total RP 3](https://www.curseforge.com/wow/addons/total-rp-3). For a manual install, download the **addon ZIP** from [GitHub Releases](https://github.com/z0n/FlareUI_RP/releases), not **Source code (zip)**. Extract it so `Interface/AddOns/FlareUI_RP/FlareUI_RP.toc` exists.
 2. Enable **Unit Frames**, **Nameplates**, or both in FlareUI.
-3. Open **Total RP 3 > Settings > FlareUI RP**. RP names and colours are on by default and can be changed independently without a reload.
+3. Open **Total RP 3 > Settings > FlareUI RP**. RP names and profile colours are on by default. RP titles, guild names and guildmate colours are opt-in; their setup hints appear only after you enable them.
 
 ## RP names and colours
 
@@ -14,7 +14,7 @@ RP names follow each label’s **First Name**, **Last Name** or **Full Name** se
 
 - **Unit frames:** Enable **Look > Class Colours** on the player, target, focus, target of target or target of focus frame to see RP health colours. For party and raid, select the corresponding frame in Edit Mode. Health warnings and gradients keep priority.
 - **Player nameplates:** Choose **Class & Reaction** for RP health colours. RP colours also apply to class-coloured names in **Name Only** mode or with **Colour Names by Class** enabled. Party, raid and guild name colours keep priority. **Names Above Plate** has its own name format.
-- **RP guilds:** Add the **Guild name** field to your TRP3 profile’s Characteristics. In FlareUI, enable **Show Guild Name** for friendly or enemy **Name Only** plates separately. The profile guild appears beneath the title or name, even without an in-game guild. If the field is empty, or you turn off **Use RP Guild Names** in FlareUI RP, the normal guild line is used.
+- **RP guilds:** Enable **Use RP Guild Names** in FlareUI RP and **Show Guild Name** for friendly or enemy **Name Only** plates in FlareUI. The **Guild name** from the player’s TRP3 Characteristics appears beneath the title or name, even without an in-game guild. An empty field keeps the normal guild line.
 - **RP titles:** Enable **Use RP Titles** (off by default) and FlareUI’s **Show Titles** for friendly or enemy **Name Only** plates. A player’s TRP3 **Full title** appears between the name and guild; a blank profile title keeps FlareUI’s usual title.
 
 **Colour RP Guild Members** is off by default. Enable it to extend FlareUI’s **Colour Guild Members** on friendly **Name Only** plates. Players whose TRP3 guild matches yours get the same name colour as in-game guildmates, even with **Show Guild Name** off. Party and raid colours still take priority.
