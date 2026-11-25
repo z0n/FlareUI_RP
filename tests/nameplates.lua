@@ -17,6 +17,7 @@ FlareUI = { Nameplates = { C = { NAME_LIFT = 0.6 }, LevelPrefix = function() ret
         p.aboveName:SetText(stock)
         p.aboveName:SetTextColor(p.name.red)
     end
+    FlareUI.Nameplates.ColorLines(p)
 end, BarColor = function(p, r, g, b)
     p.fill, p.barR, p.barG, p.barB = r, r, g, b
     p.barKnown = canaccessvalue(r) and canaccessvalue(g) and canaccessvalue(b)
@@ -42,6 +43,12 @@ local records = { A = { "Aster", "Aster Moonfall", 0.8 }, Me = { guild = " NIGHT
 local secret = {}
 local gameGuild
 local gameTitle
+function FlareUI.Nameplates.ColorLines(p)
+    for _, key in ipairs({ "npcTitle", "guildName" }) do
+        local line = p[key]
+        if line and line:IsShown() then line:SetTextColor(p.name.red, p.name.green, p.name.blue) end
+    end
+end
 function UnitPVPName() return gameTitle end
 function FlareUI.Nameplates.UpdateTitleLine(p)
     if not p.npcTitle then return end
@@ -51,9 +58,9 @@ end
 function FlareUI.Nameplates.UpdateTitle(p)
     FlareUI.Nameplates.UpdateTitleLine(p)
     FlareUI.Nameplates.UpdateGuild(p)
+    FlareUI.Nameplates.ColorLines(p)
 end
 function GetGuildInfo() return gameGuild end
-FlareUI.PALETTE = { bronze5 = { 0.85, 0.68, 0.47 } }
 FlareUI.Nameplates.UpdateGuild = function(p)
     if not p.guildName then return end
     p.guildName.shown = p.nameOnly and p.tdb.showGuild and
@@ -205,11 +212,12 @@ handlers.flareui_rp_plate_colours(nil, false)
 records.B = { guild = "  Night Watch  " }
 paintGuild(plate); assert(not label.shown, "RP guild names are opt-in")
 handlers.flareui_rp_plate_guilds(nil, true)
+assert(label.red == 0.5, "newly revealed RP guild inherits the name colour with RP titles off")
 callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
 assert(label.shown and label.text == "<Night Watch>" and label.anchor == plate.name)
-plate.npcTitle = { IsShown = function() return true end }
+plate.npcTitle = { IsShown = function() return true end, SetTextColor = label.SetTextColor }
 plate.kind = "friendlyPlayer"; paintGuild(plate)
-assert(label.anchor == plate.npcTitle and label.red == 0.85)
+assert(label.anchor == plate.npcTitle)
 gameGuild = "Stock"; paintGuild(plate); assert(label.text == "<Night Watch>")
 handlers.flareui_rp_plate_guilds(nil, false); assert(label.text == "<Stock>")
 handlers.flareui_rp_plate_guilds(nil, true)
@@ -255,6 +263,14 @@ local updateTitle = FlareUI.Nameplates.UpdateTitle
 updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
 handlers.flareui_rp_plate_titles(nil, "full")
 assert(plate.npcTitle.text == "Keeper of the Watch" and label.anchor == plate.npcTitle)
+records.B[3] = 0.75
+handlers.flareui_rp_plate_colours(nil, true)
+plate.tdb.guildColor = false
+paint(plate)
+assert(label.red == 0.75 and plate.npcTitle.red == 0.75, "name-only repaint must recolour both visible lines")
+plate.tdb.guildColor = true
+paint(plate)
+assert(label.green == 0.9 and plate.npcTitle.green == 0.9, "RP guildmate colour must reach both lines")
 records.B.title = "Knight of the Silver Hand || Veteran of the Third War"
 updateTitle(plate)
 assert(plate.npcTitle.wrap and plate.npcTitle.text == "Knight of the Silver Hand\nVeteran of the Third War")
@@ -352,6 +368,7 @@ local beforeUpdate = namesPainted
 callbacks.REGISTER_DATA_UPDATED(nil, "Other-Realm_Spider"); flush()
 assert(namesPainted == beforeUpdate + 1 and secondLookups == 1, "same pet name, different owner must not repaint")
 assert(plate.name.text:match("Silk$") and plate.name.red == 0.5 and plate.npcTitle.text == "The Weaver")
+assert(plate.npcTitle.red == 0.5 and not label.shown, "recycled companion plate keeps its reaction colour")
 plate.nameOnly = false
 linked.data.NA = nil
 paint(plate); assert(plate.name.text:match("Spider$") and plate.name.red == 1)

@@ -73,7 +73,10 @@ local function Paint(p)
     if checkGuild and ns.SharesProfileGuild(profile) then
         local g = ChatTypeInfo and ChatTypeInfo.GUILD
         local r, green, b = g and g.r or 0.25, g and g.g or 1, g and g.b or 0.25
-        if p.nameSlot then p.name:SetTextColor(r, green, b) end
+        if p.nameSlot then
+            p.name:SetTextColor(r, green, b)
+            np.ColorLines(p)
+        end
         if above then p.aboveName:SetTextColor(r, green, b) end
         return
     end
@@ -96,6 +99,7 @@ local function Paint(p)
                 end
             end
             p.name:SetTextColor(r, g, b)
+            if p.nameOnly then np.ColorLines(p) end
         end
     end
 end
@@ -251,11 +255,7 @@ local function PaintTitle(p)
         wrappedTitles[label] = true
     end
     label:SetText(title)
-    if not label:IsShown() then
-        local c = FlareUI.PALETTE.bronze5
-        label:SetTextColor(c[1], c[2], c[3], 1)
-        label:Show()
-    end
+    if not label:IsShown() then label:Show() end
     if wrappedTitles[label] then
         -- Move the existing centre anchor, not the plate or its hit area.
         -- The title and guild follow the name through FlareUI's own anchors.
@@ -275,8 +275,6 @@ local function PaintGuild(p)
     if not guild then return end
     label:SetText("<" .. guild .. ">")
     if not label:IsShown() then
-        local c = FlareUI.PALETTE.bronze5
-        label:SetTextColor(c[1], c[2], c[3], 1)
         label:ClearAllPoints()
         label:SetPoint("TOP", (p.npcTitle and p.npcTitle:IsShown()) and p.npcTitle or p.name, "BOTTOM", 0, -1)
         label:Show()
@@ -299,7 +297,11 @@ local function Refresh(refreshBars, ids, restoreTitles)
         elseif NeedsRefresh(unit, ids) then
             np.UpdateName(p)
             if titles or restoreTitles then np.UpdateTitle(p)
-            elseif np.UpdateGuild then np.UpdateGuild(p) end
+            elseif np.UpdateGuild then
+                np.UpdateGuild(p)
+                -- A guild-only refresh skips UpdateTitle's final colour pass.
+                np.ColorLines(p)
+            end
             if refreshBars and np.UpdateColor and np.BarColor then np.UpdateColor(p) end
         end
     end
