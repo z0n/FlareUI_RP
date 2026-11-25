@@ -14,7 +14,9 @@ Run from the addon root. A release request starts preparation; only the final co
 
 ## 2. Review the proposal
 
-Show the base tag and candidate HEAD, recommend a version with a reason, and present the **full proposed `CHANGELOG.md`** starting with `# FlareUI RP X.Y.Z`. Write for players: what changed, where settings live, and what they may need to do. Keep internal work and test results in the summary. Review `CURSEFORGE.md` against the candidate and explain any proposed description edit.
+Show the base tag and candidate HEAD, recommend a version with a reason, and present the **full proposed `CHANGELOG.md`**. Always use the heading `# FlareUI RP X.Y.Z — <main feature or fix>`. For a compatibility release, name the addon and version in the heading. Write for players: what changed, where settings live, and what they may need to do. Keep internal work and test results in the summary. Review `CURSEFORGE.md` against the candidate and explain any proposed description edit.
+
+Assume players can keep their current settings. If a change is needed, tell them which setting to change and where to find it. Otherwise, omit the settings reminder.
 
 Ask the maintainer to accept or revise the version and wording before editing. If they request revisions, show the revised proposal. Acceptance here approves preparation only.
 
