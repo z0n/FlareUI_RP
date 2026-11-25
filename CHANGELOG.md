@@ -1,5 +1,5 @@
-# FlareUI RP 0.7.1 — FlareUI 7.0.15 Compatibility
+# FlareUI RP 0.7.2 — FlareUI 7.0.16 Compatibility
 
-- Fixed compatibility with FlareUI 7.0.15 on **Name Only** nameplates. When FlareUI RP applies a profile or guildmate colour, the title and guild lines now follow it as FlareUI intends. An RP guild shown with titles turned off also uses the name colour.
+- Fixed a Lua error when colouring or refreshing nameplates in FlareUI 7.0.16. On **Name Only** plates, profile and guildmate colours apply to the character name. Titles and guild names keep FlareUI’s parchment colour, even when only the RP profile supplies them.
 
-Update FlareUI to **7.0.15** or later.
+Update FlareUI to **7.0.16**.
