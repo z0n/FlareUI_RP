@@ -229,17 +229,24 @@ local function PaintTitle(p)
     if np.TitlesOn then
         if not np.TitlesOn(p.tdb, p.kind) then return end
     elseif not p.tdb.showTitles then return end
-    local title
+    local title, profile
+    local full = titles == "full"
     if p.kind == "friendlyPlayer" or p.kind == "enemyPlayer" then
         if not label:IsShown() and UnitPVPName and not canaccessvalue((UnitPVPName(p.unit))) then return end
-        title = ns.ProfileTitle(ns.Profile(p.unit), titles)
+        profile = ns.Profile(p.unit)
+        title = ns.ProfileTitle(profile, titles)
     else
         title = ns.CompanionTitle(ns.CompanionData(p.unit))
     end
-    if not HasTitleText(title) then return end
-    if titles == "full" then title = FullTitleRows(title) end
-    if not title then return end
-    if titles == "full" and title:find("\n", 1, true) then
+    if full then
+        title = HasTitleText(title) and FullTitleRows(title)
+        if not title and profile then
+            title = ns.ProfileTitle(profile, "short")
+            full = false
+        end
+    end
+    if not title or (not full and not HasTitleText(title)) then return end
+    if full and title:find("\n", 1, true) then
         label:SetWordWrap(true)
         wrappedTitles[label] = true
     end
@@ -344,7 +351,7 @@ function ns.StartNameplates(config, elements)
         elements[#elements + 1] = { inherit = "TRP3_ConfigDropDown", configKey = key, title = "RP Titles",
             widgetName = "FlareUI_RP_ConfigPlateTitles",
             listContent = { { "No RP titles", "none" }, { "Short title", "short" }, { "Full title", "full" } },
-            help = "Choose which profile title to show on Name Only plates with Show Titles enabled. Linked companions use their single title for either choice. An empty title keeps FlareUI's normal line." }
+            help = "Choose which profile title to show on Name Only plates with Show Titles enabled. Full title uses the short title if the full title is empty. Linked companions use their single title for either choice. If no matching title is available, FlareUI keeps its normal line." }
         -- The host anchors the guild immediately after painting this title line.
         hooksecurefunc(np, "UpdateTitleLine", PaintTitle)
     end

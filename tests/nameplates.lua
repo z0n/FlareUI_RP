@@ -317,6 +317,12 @@ handlers.flareui_rp_plate_titles(nil, "short"); assert(plate.npcTitle.text == "C
 records.B.shortTitle = invisible; updateTitle(plate); assert(plate.npcTitle.text == "Corporal")
 records.B.shortTitle = "Dame | Keeper - Warden"; callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
 assert(plate.npcTitle.text == records.B.shortTitle)
+handlers.flareui_rp_plate_titles(nil, "full"); assert(plate.npcTitle.text == "Keeper")
+for _, empty in ipairs({ invisible, " || | ", "" }) do
+    records.B.title = empty
+    updateTitle(plate)
+    assert(plate.npcTitle.text == records.B.shortTitle and not plate.npcTitle.wrap)
+end
 handlers.flareui_rp_plate_titles(nil, "none"); assert(plate.npcTitle.text == "Corporal")
 local owner, linked = "Other-Realm", nil
 function UnitOwnerGUID() return owner end
