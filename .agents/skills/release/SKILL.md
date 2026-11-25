@@ -10,7 +10,7 @@ Run from the addon root. A release request starts preparation; only the final co
 - Inspect the current branch, upstream, push destination and working tree (including staged and untracked files). Start on `main` with a clean tree. If local work is pending, stop and let the maintainer decide what belongs in the release; never stash or sweep it into the release commit.
 - Fetch the release remote's branch and tags. Stop if the branch is behind or diverged. Local commits ahead are fine: identify them explicitly because the push will publish those too.
 - Find the latest release tag reachable on `main` (`git describe --tags --match 'v[0-9]*' --abbrev=0`). Cross-check it against the remote release tags, TOC version and current changelog heading; resolve any discrepancy before choosing a version.
-- Read both the commit log and the net diff from that tag to HEAD. Summarize player-visible changes and maintainer-only work separately. Consult `DEPENDENCIES.md` for dependency-facing changes; distinguish recorded in-game results from mock checks and outstanding testing.
+- Read both the commit log and the net diff from that tag to HEAD. Summarize player-visible changes and maintainer-only work separately. Consult `DEPENDENCIES.md` for baseline versions. Use work summaries or PRs for verification details; distinguish recorded in-game results from mock checks and outstanding testing.
 
 ## 2. Review the proposal
 
@@ -22,7 +22,7 @@ Ask the maintainer to accept or revise the version and wording before editing. I
 
 - Prepend the outgoing `CHANGELOG.md` verbatim to `CHANGELOG-history.md`, newest first, exactly once. Replace `CHANGELOG.md` with only the approved release entry: `.pkgmeta` publishes the whole file. Update `## Version` in `FlareUI_RP.toc` and apply agreed description edits.
 - Read `.github/workflows/release.yml`. Check that the TOC has a positive numeric `X-Curse-Project-ID` and the proposed `vX.Y.Z` tag matches the TOC. Check availability of the `CF_API_KEY` Actions secret by name only; if visibility is restricted, ask the maintainer to confirm it is configured. Never request its value. Resolve missing prerequisites before publication.
-- Run `./tools/check` and `git diff --check`. Review the full release diff, the archive order and the dependency verification record. Report failures and unresolved in-game checks accurately. Stop on failed checks; if fixes change release contents, review them and rerun verification.
+- Run `./tools/check` and `git diff --check`. Review the full release diff, the archive order and any baseline changes. Report failures and unresolved in-game checks accurately. Stop on failed checks; if fixes change release contents, review them and rerun verification.
 
 ## 4. Final authorization and publication
 

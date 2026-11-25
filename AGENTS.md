@@ -3,7 +3,7 @@
 ## Workflow
 
 1. **Use the recorded baseline.** For dependency-facing work, consult [DEPENDENCIES.md](DEPENDENCIES.md) and read the relevant tagged source locally with `git show <tag>:<path>`. Routine questions and changes need no upstream fetch or version report. Use `@dependency-audit` when the maintainer requests an update check.
-2. **Implement and verify** against that baseline. For dependency-facing changes, update its verification record with the change, checks performed and any in-game results. Leave changes uncommitted unless asked.
+2. **Implement and verify** against that baseline. Keep `DEPENDENCIES.md` limited to version links; update it only when the baseline changes. Report checks and in-game results in the work summary or PR. Leave changes uncommitted unless asked.
 3. **When asked to prepare a release,** use the [release skill](.agents/skills/release/SKILL.md) (`@release`). Review the changes and proposed player-facing changelog with the maintainer, prepare the release files and run `./tools/check`. Wait for separate, explicit publication approval before committing, tagging and pushing the reviewed release.
 4. **Review [CURSEFORGE.md](CURSEFORGE.md)** against the release. This file is the source for the CurseForge project description. If it needs an update, edit it here. When it has changed since the previous release tag, remind the maintainer to copy the tagged file’s contents into the CurseForge description editor after release.
 
