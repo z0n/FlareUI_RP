@@ -145,7 +145,22 @@ colourHint.OnShow(); assert(not colourHint.Button.shown)
 local held, picks, enemies = nil, "010", false
 FlareUI.Nameplates.FriendlyHeld = function() return held end
 FlareUI.Nameplates.FriendlyPicks = function() return picks end
-function GetCVarBool(key) assert(key == "nameplateShowEnemies"); return enemies end
+local enemyMinions = false
+function GetCVarBool(key)
+    if key == "nameplateShowEnemyMinions" then return enemyMinions end
+    assert(key == "nameplateShowEnemies"); return enemies
+end
+plates.minor = { plate = "name", showTitles = true }
+titleHint.OnShow(); assert(titleHint.Title.shown and titleHint.Title.text:find("Players under Friendly Types"))
+plates.friendlyPlayer.showTitles = false
+titleHint.OnShow(); assert(titleHint.Title.shown and titleHint.Title.text:find("Minions under Friendly Types"))
+held = "001"
+titleHint.OnShow(); assert(not titleHint.Title.shown)
+held, enemyMinions = nil, true
+titleHint.OnShow(); assert(titleHint.Title.shown, "enemy minions need enemy plates")
+profile.nameplates.enemyInCombat = true
+titleHint.OnShow(); assert(not titleHint.Title.shown)
+profile.nameplates.enemyInCombat = false
 plates.friendlyPlayer.showGuild = true
 labelHint.OnShow(); colourHint.OnShow()
 assert(labelHint.Title.shown and colourHint.Title.shown and colourHint.Title.text:find("Friendly Types"))

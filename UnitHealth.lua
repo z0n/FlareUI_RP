@@ -1,6 +1,6 @@
 local _, ns = ...
 ns.directFrames = {
-    player = "FlareUI_UF_Player", target = "FlareUI_UF_Target", focus = "FlareUI_UF_Focus",
+    player = "FlareUI_UF_Player", pet = "FlareUI_UF_Pet", target = "FlareUI_UF_Target", focus = "FlareUI_UF_Focus",
     targettarget = "FlareUI_UF_TargetOfTarget", focustarget = "FlareUI_UF_TargetOfFocus",
 }
 local states = {}

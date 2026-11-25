@@ -99,6 +99,21 @@ id, npc = "Forest Spider", true
 afterName(target)
 assert(target.Name.text == "Forest Spider")
 assert(target.NameAboveText.text == "Forest Spider")
+local pet = { fuiUnit = "pet", Name = { SetText = target.Name.SetText } }
+FlareUI_UF_Pet = pet
+function strtrim(s) return s:match("^%s*(.-)%s*$") end
+function UnitOwnerGUID(unit) if unit == "pet" then return "owner-guid" end end
+TRP3_API.globals = { player_id = "Self" }
+TRP3_API.ui = { misc = { getTargetType = function() return "pet" end,
+    isTargetTypeACompanion = function(k) return k == "pet" end,
+    getCompanionFullID = function() return "Self_Spider", "Self" end } }
+TRP3_API.companions = { player = { getCompanionProfile = function(k)
+    assert(k == "Spider"); return { data = { NA = "  Silk  " } }
+end } }
+afterName(pet); assert(pet.Name.text == "Silk")
+restricted = true
+afterName(pet); assert(pet.Name.text == "Forest Spider")
+restricted = false
 records.Self = { "Rowan", "Rowan Hill" }
 events.REGISTER_DATA_UPDATED()
 flush()

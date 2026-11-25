@@ -41,9 +41,13 @@ local function ActiveNameplates()
 end
 
 -- Use the configured visibility, not the temporary out-of-combat CVars.
+local function FriendlyPicks(np)
+    return (np.FriendlyHeld and np.FriendlyHeld()) or (np.FriendlyPicks and np.FriendlyPicks())
+end
+
 local function VisibilityHint(np, kind)
     if kind == "friendlyPlayer" then
-        local picks = (np.FriendlyHeld and np.FriendlyHeld()) or (np.FriendlyPicks and np.FriendlyPicks())
+        local picks = FriendlyPicks(np)
         if picks and picks:sub(1, 1) ~= "1" then
             return "In Visibility, enable Players under Friendly Types."
         end
@@ -60,6 +64,7 @@ end
 local function LabelHint(key, feature, setting)
     local np = ActiveNameplates()
     if not np then return end
+    local companionTitles = key == "showTitles"
     local visibility
     for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
         local db = np.TypeDB(kind)
@@ -69,8 +74,19 @@ local function LabelHint(key, feature, setting)
             visibility = visibility or hint
         end
     end
+    if companionTitles then
+        local minor = np.TypeDB("minor")
+        if minor and minor.plate == "name" and minor.showTitles then
+            local picks = FriendlyPicks(np)
+            if picks and picks:sub(3, 3) == "1" then return end
+            if GetCVarBool and GetCVarBool("nameplateShowEnemyMinions")
+                and (Profile().nameplates.enemyInCombat or GetCVarBool("nameplateShowEnemies")) then return end
+            visibility = visibility or "In Visibility, enable Minions under Friendly Types."
+        end
+    end
     if visibility then return "For " .. feature .. ": " .. visibility, "np", "visibility" end
-    return "For " .. feature .. ", select Friendly Player or Enemy Player in Plate Setup. Under Style, enable Name Only Mode and " .. setting .. ".", "np", "style"
+    local types = companionTitles and "Friendly Player, Enemy Player or Minor (companions)" or "Friendly Player or Enemy Player"
+    return "For " .. feature .. ", select " .. types .. " in Plate Setup. Under Style, enable Name Only Mode and " .. setting .. ".", "np", "style"
 end
 
 local function GuildColourHint()

@@ -292,6 +292,44 @@ records.B.shortTitle = invisible; updateTitle(plate); assert(plate.npcTitle.text
 records.B.shortTitle = "Dame | Keeper - Warden"; callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
 assert(plate.npcTitle.text == records.B.shortTitle)
 handlers.flareui_rp_plate_titles(nil, "none"); assert(plate.npcTitle.text == "Corporal")
-plate.gamePlate, plate.unit = nil, nil
+local owner, linked = "Other-Realm", nil
+function UnitOwnerGUID() return owner end
+TRP3_API.ui = { misc = { getTargetType = function() return "pet" end,
+    isTargetTypeACompanion = function(k) return k == "pet" end,
+    getCompanionFullID = function(unit)
+        if unit == "nameplate2" then return "Second-Realm_Spider", "Second-Realm" end
+        return owner .. "_Spider", owner
+    end } }
+local secondLookups = 0
+TRP3_API.companions = { register = { getCompanionProfile = function(id)
+    if id == "Second-Realm_Spider" then secondLookups = secondLookups + 1; return { data = { NA = "Web" } } end
+    assert(id == "Other-Realm_Spider"); return linked
+end } }
+TRP3_API.Colors = { Black = {} }
+TRP3_API.CreateColorFromHexString = function(hex) assert(hex == "ff0000"); return { GetRGB = function() return 1, 0, 0 end } end
+TRP3_API.GenerateReadableColor = function(c) return c end
+person, plate.kind, gameTitle = "Spider", "minor", "Other's Pet"
+handlers.flareui_rp_plate_names(nil, true)
+handlers.flareui_rp_plate_titles(nil, "short")
+handlers.flareui_rp_plate_companion_colours(nil, true)
+local second = { unit = "nameplate2", gamePlate = plate.gamePlate, kind = "minor", nameOnly = true,
+    nameSlot = "left", tdb = {}, name = { SetText = plate.name.SetText, SetTextColor = plate.name.SetTextColor } }
+paint(second); assert(second.name.text == "Web")
+linked = { data = { NA = "Silk", TI = "The Weaver", NH = "ff0000" } }
+local beforeUpdate = namesPainted
+callbacks.REGISTER_DATA_UPDATED(nil, "Other-Realm_Spider"); flush()
+assert(namesPainted == beforeUpdate + 1 and secondLookups == 1, "same pet name, different owner must not repaint")
+assert(plate.name.text:match("Silk$") and plate.name.red == 0.5 and plate.npcTitle.text == "The Weaver")
+plate.nameOnly = false
+linked.data.NA = nil
+paint(plate); assert(plate.name.text:match("Spider$") and plate.name.red == 1)
+FlareUI.Nameplates.UpdateColor(plate); assert(plate.fill == stockRed)
+callbacks.REGISTER_DATA_UPDATED(nil, "Other-Realm_Spider")
+owner = secret
+flush(); assert(plate.name.red == 0.5, "restricted identity at flush must restore the host colour")
+owner, plate.nameOnly = "Different-Realm", true
+TRP3_API.companions.register.getCompanionProfile = function(id) assert(id == "Different-Realm_Spider") end
+updateTitle(plate); assert(plate.npcTitle.text == gameTitle)
+plate.gamePlate, plate.unit, second.gamePlate = nil, nil, nil
 callbacks.REGISTER_PROFILE_DELETED(); queued()
 print("PASS: player plate names, display colour, independent settings, prefix, recycled plates and late updates")

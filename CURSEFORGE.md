@@ -1,9 +1,10 @@
 **FlareUI RP** brings Total RP 3 profiles to FlareUI in **WoW: Forever**.
 
-## Unit frames and player nameplates
+## Unit frames and nameplates
 
 - **RP names** follow FlareUI’s first, last or full name setting for each label.
 - **Profile colours** replace class colours while preserving health warnings and group colours.
+- **Linked pets and minions** can show their TRP3 name on frames and nameplates, their title on Name Only plates, and their optional profile name colour on full plates.
 
 ## Optional nameplate features
 

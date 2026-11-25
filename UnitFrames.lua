@@ -1,7 +1,7 @@
 local _, ns = ...
 
-local function DisplayName(unit, full, profile)
-    local name = ns.ProfileName(profile, full)
+local function DisplayName(unit, full, profile, companionName)
+    local name = companionName or ns.ProfileName(profile, full)
     if name then return name end
     -- Pass the host's fallback through without comparing secret name strings.
     return FlareUI.UnitDisplayName(unit, nil, full)
@@ -20,7 +20,8 @@ local function Paint(frame, restoreNames)
     if not ns.namesEnabled and not restoreNames then return end
     local full = FlareUI.UnitFrames.ShowsFullName(frame)
     if not ns.namesEnabled then rp = nil end
-    local name = DisplayName(unit, full, rp)
+    local companionName = ns.namesEnabled and not rp and ns.CompanionName(ns.CompanionData(unit))
+    local name = DisplayName(unit, full, rp, companionName)
     frame.Name:SetText(name)
 
     local above = frame.NameAboveText
@@ -31,7 +32,7 @@ local function Paint(frame, restoreNames)
     local slot, kind = FlareUI.NameAbove.Get(settings)
     if not slot then return end
     local aboveFull = ns.NameFormat(kind)
-    if aboveFull ~= full then name = DisplayName(unit, aboveFull, rp) end
+    if aboveFull ~= full then name = DisplayName(unit, aboveFull, rp, companionName) end
     local levels = settings.showLevel and not (FlareUI.UFRing and FlareUI.UFRing.Applies(frame)) and settings
     ns.SetAboveName(above, name, unit, levels, true)
 end
@@ -78,7 +79,7 @@ local function StartUnitFrames(config, elements)
         end)
     end
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = namesKey, title = "Use RP Names",
-        help = "Use RP names on Player, Target, Focus, Target of Target and Target of Focus. FlareUI still controls which names appear and their format." }
+        help = "Use player and linked companion names on Player, Pet, Target, Focus, Target of Target and Target of Focus. FlareUI still controls which names appear." }
     if ns.unitHealthActive then
         elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "RP Health Bar Colours" }
         local labels = { player = "Player", target = "Target", focus = "Focus", targettarget = "Target of Target", focustarget = "Target of Focus" }
@@ -161,7 +162,7 @@ local function SettingsSections(config, elements)
     end
     Add("Player, Target & Focus", StartUnitFrames)
     Add("Party & Raid", ns.StartGroupFrames)
-    Add("Player Nameplates", ns.StartNameplates)
+    Add("Nameplates", ns.StartNameplates)
     Add("TRP3 Bar Appearance", ns.StartToolbar)
     Add("TRP3 Main Window", ns.StartMainWindow)
     local watchHints = ns.AddSetupHints(elements)

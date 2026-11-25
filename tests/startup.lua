@@ -41,7 +41,7 @@ local function run(hasNames, hasPlates)
         elseif element.configKey then controls[element.configKey] = assert(section) end
     end
     assert(controls.flareui_rp_unit_names == (hasNames and "Player, Target & Focus" or nil))
-    assert(controls.flareui_rp_plate_names == (hasPlates and "Player Nameplates" or nil))
+    assert(controls.flareui_rp_plate_names == (hasPlates and "Nameplates" or nil))
     assert(not controls.flareui_rp_player_health, "unsupported health controls must stay hidden")
     local widgets = {}
     for _, row in ipairs(page.elements) do
@@ -50,7 +50,7 @@ local function run(hasNames, hasPlates)
     end
     if hasPlates then
         if hasNames then
-            local plates = widgets["Player Nameplates"]
+            local plates = widgets["Nameplates"]
             assert(plates.Title.mouseEnabled == false, "heading text must pass input to the row")
             assert(plates.arrow.angle == math.pi / 2)
             plates.OnClick()
