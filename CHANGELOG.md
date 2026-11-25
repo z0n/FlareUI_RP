@@ -1,5 +1,3 @@
-# FlareUI RP 0.7.2 — FlareUI 7.0.16 Compatibility
+# FlareUI RP 0.7.3 — Full RP Title Line Breaks
 
-- Fixed a Lua error when colouring or refreshing nameplates in FlareUI 7.0.16. On **Name Only** plates, profile and guildmate colours apply to the character name. Titles and guild names keep FlareUI’s parchment colour, even when only the RP profile supplies them.
-
-Update FlareUI to **7.0.16**.
+- On **Name Only** nameplates, full RP titles now start a new line at a slash (`/`) or lowercase L (`l`) with a space on each side. A title like `Scout/Ranger / Locksmith` displays `Scout/Ranger` on the first line and `Locksmith` on the second.
