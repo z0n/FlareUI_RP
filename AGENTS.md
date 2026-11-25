@@ -2,6 +2,8 @@
 
 ## Workflow
 
+For each dependency, support only its latest published stable release for Forever. Use its tagged API directly; when adopting a new baseline, remove code and mocks kept solely for older releases. Optional integrations must still work with the dependency absent.
+
 1. **Use the recorded baseline.** For dependency-facing work, consult [DEPENDENCIES.md](DEPENDENCIES.md) and read the relevant tagged source locally with `git show <tag>:<path>`. Routine questions and changes need no upstream fetch or version report. Use `@dependency-audit` when the maintainer requests an update check.
 2. **Implement and verify** against that baseline. Keep `DEPENDENCIES.md` limited to version links; update it only when the baseline changes. Report checks and in-game results in the work summary or PR. Leave changes uncommitted unless asked.
 3. **When asked to prepare a release,** use the [release skill](.agents/skills/release/SKILL.md) (`@release`). Review the changes and proposed player-facing changelog with the maintainer, prepare the release files and run `./tools/check`. Wait for separate, explicit publication approval before committing, tagging and pushing the reviewed release.

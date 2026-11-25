@@ -73,10 +73,7 @@ local function Paint(p)
     if checkGuild and ns.SharesProfileGuild(profile) then
         local g = ChatTypeInfo and ChatTypeInfo.GUILD
         local r, green, b = g and g.r or 0.25, g and g.g or 1, g and g.b or 0.25
-        if p.nameSlot then
-            p.name:SetTextColor(r, green, b)
-            np.ColorLines(p)
-        end
+        if p.nameSlot then p.name:SetTextColor(r, green, b) end
         if above then p.aboveName:SetTextColor(r, green, b) end
         return
     end
@@ -99,7 +96,6 @@ local function Paint(p)
                 end
             end
             p.name:SetTextColor(r, g, b)
-            if p.nameOnly then np.ColorLines(p) end
         end
     end
 end
@@ -218,6 +214,14 @@ end
 
 local wrappedTitles = setmetatable({}, { __mode = "k" })
 
+-- When stock has no text, it hides the line before applying its parchment.
+-- Match the host on lines that only become visible because of an RP profile.
+local function ShowRPLine(label)
+    local c = FlareUI.PALETTE.parchment
+    label:SetTextColor(c[1], c[2], c[3], 1)
+    label:Show()
+end
+
 local function PaintTitle(p)
     if not Live(p) then return end
     seen[p] = true
@@ -230,9 +234,7 @@ local function PaintTitle(p)
         wrappedTitles[label] = nil
     end
     if not (titles and label and p.nameOnly and p.tdb) then return end
-    if np.TitlesOn then
-        if not np.TitlesOn(p.tdb, p.kind) then return end
-    elseif not p.tdb.showTitles then return end
+    if not np.TitlesOn(p.tdb, p.kind) then return end
     local title, profile
     local full = titles == "full"
     if p.kind == "friendlyPlayer" or p.kind == "enemyPlayer" then
@@ -255,7 +257,7 @@ local function PaintTitle(p)
         wrappedTitles[label] = true
     end
     label:SetText(title)
-    if not label:IsShown() then label:Show() end
+    if not label:IsShown() then ShowRPLine(label) end
     if wrappedTitles[label] then
         -- Move the existing centre anchor, not the plate or its hit area.
         -- The title and guild follow the name through FlareUI's own anchors.
@@ -277,7 +279,7 @@ local function PaintGuild(p)
     if not label:IsShown() then
         label:ClearAllPoints()
         label:SetPoint("TOP", (p.npcTitle and p.npcTitle:IsShown()) and p.npcTitle or p.name, "BOTTOM", 0, -1)
-        label:Show()
+        ShowRPLine(label)
     end
 end
 
@@ -299,8 +301,6 @@ local function Refresh(refreshBars, ids, restoreTitles)
             if titles or restoreTitles then np.UpdateTitle(p)
             elseif np.UpdateGuild then
                 np.UpdateGuild(p)
-                -- A guild-only refresh skips UpdateTitle's final colour pass.
-                np.ColorLines(p)
             end
             if refreshBars and np.UpdateColor and np.BarColor then np.UpdateColor(p) end
         end

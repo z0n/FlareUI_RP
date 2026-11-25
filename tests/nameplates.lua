@@ -17,7 +17,6 @@ FlareUI = { Nameplates = { C = { NAME_LIFT = 0.6 }, LevelPrefix = function() ret
         p.aboveName:SetText(stock)
         p.aboveName:SetTextColor(p.name.red)
     end
-    FlareUI.Nameplates.ColorLines(p)
 end, BarColor = function(p, r, g, b)
     p.fill, p.barR, p.barG, p.barB = r, r, g, b
     p.barKnown = canaccessvalue(r) and canaccessvalue(g) and canaccessvalue(b)
@@ -43,29 +42,31 @@ local records = { A = { "Aster", "Aster Moonfall", 0.8 }, Me = { guild = " NIGHT
 local secret = {}
 local gameGuild
 local gameTitle
-function FlareUI.Nameplates.ColorLines(p)
-    for _, key in ipairs({ "npcTitle", "guildName" }) do
-        local line = p[key]
-        if line and line:IsShown() then line:SetTextColor(p.name.red, p.name.green, p.name.blue) end
-    end
+local parchment = { 0.93, 0.85, 0.68 }
+FlareUI.PALETTE = { parchment = parchment }
+local function isParchment(label)
+    return label.red == parchment[1] and label.green == parchment[2] and label.blue == parchment[3]
 end
 function UnitPVPName() return gameTitle end
+function FlareUI.Nameplates.TitlesOn(db, kind)
+    if db.showTitles == nil then return kind == "friendlyNpc" or kind == "enemyNpc" end
+    return db.showTitles
+end
 function FlareUI.Nameplates.UpdateTitleLine(p)
     if not p.npcTitle then return end
-    p.npcTitle.shown = p.nameOnly and p.tdb.showTitles and gameTitle and canaccessvalue(gameTitle)
-    if p.npcTitle.shown then p.npcTitle:SetText(gameTitle) end
+    p.npcTitle.shown = p.nameOnly and FlareUI.Nameplates.TitlesOn(p.tdb, p.kind) and gameTitle and canaccessvalue(gameTitle)
+    if p.npcTitle.shown then p.npcTitle:SetText(gameTitle); p.npcTitle:SetTextColor(unpack(parchment)) end
 end
 function FlareUI.Nameplates.UpdateTitle(p)
     FlareUI.Nameplates.UpdateTitleLine(p)
     FlareUI.Nameplates.UpdateGuild(p)
-    FlareUI.Nameplates.ColorLines(p)
 end
 function GetGuildInfo() return gameGuild end
 FlareUI.Nameplates.UpdateGuild = function(p)
     if not p.guildName then return end
     p.guildName.shown = p.nameOnly and p.tdb.showGuild and
         (p.kind == "friendlyPlayer" or p.kind == "enemyPlayer") and gameGuild and canaccessvalue(gameGuild)
-    if p.guildName.shown then p.guildName:SetText("<" .. gameGuild .. ">") end
+    if p.guildName.shown then p.guildName:SetText("<" .. gameGuild .. ">"); p.guildName:SetTextColor(unpack(parchment)) end
 end
 function canaccessvalue(value) return value ~= secret end
 function canaccessallvalues(...)
@@ -130,7 +131,7 @@ records.A[3] = 0.6
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
 plate.tdb.nameClassColor = true
--- No lift from the host (including older releases): keep the display colour.
+-- No lift from the host: keep the display colour.
 paint(plate); check("12 Aster Moonfall", 0.6); assert(plate.aboveName.red == 0.6)
 plate.aboveColor = {} -- stock UpdateBarName chose its in-bar contrast treatment
 paint(plate); bar(plate)
@@ -212,7 +213,7 @@ handlers.flareui_rp_plate_colours(nil, false)
 records.B = { guild = "  Night Watch  " }
 paintGuild(plate); assert(not label.shown, "RP guild names are opt-in")
 handlers.flareui_rp_plate_guilds(nil, true)
-assert(label.red == 0.5, "newly revealed RP guild inherits the name colour with RP titles off")
+assert(isParchment(label), "newly revealed RP guild uses parchment with RP titles off")
 callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
 assert(label.shown and label.text == "<Night Watch>" and label.anchor == plate.name)
 plate.npcTitle = { IsShown = function() return true end, SetTextColor = label.SetTextColor }
@@ -267,10 +268,15 @@ records.B[3] = 0.75
 handlers.flareui_rp_plate_colours(nil, true)
 plate.tdb.guildColor = false
 paint(plate)
-assert(label.red == 0.75 and plate.npcTitle.red == 0.75, "name-only repaint must recolour both visible lines")
+assert(plate.name.red == 0.75 and isParchment(label) and isParchment(plate.npcTitle))
 plate.tdb.guildColor = true
 paint(plate)
-assert(label.green == 0.9 and plate.npcTitle.green == 0.9, "RP guildmate colour must reach both lines")
+assert(plate.name.green == 0.9 and isParchment(label) and isParchment(plate.npcTitle))
+handlers.flareui_rp_plate_colours(nil, false)
+person = "A"; paint(plate); updateTitle(plate)
+assert(plate.name.red == 0.5 and not label.shown and not plate.npcTitle.shown)
+person = "B"; handlers.flareui_rp_plate_colours(nil, true)
+assert(isParchment(label) and isParchment(plate.npcTitle))
 records.B.title = "Knight of the Silver Hand || Veteran of the Third War"
 updateTitle(plate)
 assert(plate.npcTitle.wrap and plate.npcTitle.text == "Knight of the Silver Hand\nVeteran of the Third War")
@@ -368,7 +374,7 @@ local beforeUpdate = namesPainted
 callbacks.REGISTER_DATA_UPDATED(nil, "Other-Realm_Spider"); flush()
 assert(namesPainted == beforeUpdate + 1 and secondLookups == 1, "same pet name, different owner must not repaint")
 assert(plate.name.text:match("Silk$") and plate.name.red == 0.5 and plate.npcTitle.text == "The Weaver")
-assert(plate.npcTitle.red == 0.5 and not label.shown, "recycled companion plate keeps its reaction colour")
+assert(isParchment(plate.npcTitle) and not label.shown, "recycled companion plate keeps the title parchment and hides the guild")
 plate.nameOnly = false
 linked.data.NA = nil
 paint(plate); assert(plate.name.text:match("Spider$") and plate.name.red == 1)
