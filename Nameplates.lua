@@ -169,7 +169,7 @@ end
 
 -- Candidate bytes include the UTF-8 lead bytes of │ and ｜. Match the
 -- complete character before splitting; skip separators inside inline markup.
-local titleMarks = "[|%->\226\239]"
+local titleMarks = "[|l/%->\226\239]"
 local function FullTitleRows(title)
     local mark = title and title:find(titleMarks)
     if not mark then return title end
@@ -185,7 +185,7 @@ local function FullTitleRows(title)
         elseif char == "\226" or char == "\239" then
             local glyph = title:sub(mark, mark + 2)
             if glyph == "│" or glyph == "｜" then nextStart = mark + 3 else last = mark end
-        elseif char == "-" then
+        elseif char == "-" or char == "l" or char == "/" then
             if code ~= " " or title:sub(mark - 1, mark - 1) ~= " " then last = mark end
         elseif code == "c" then
             _, last = title:find("^|c%x%x%x%x%x%x%x%x", mark)

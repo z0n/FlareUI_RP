@@ -322,6 +322,10 @@ for _, case in ipairs({
     { "◆ | Tanner | Scavenger", "◆\nTanner\nScavenger" },
     { "~~ | Tanner | Scavenger | ~", "~~\nTanner\nScavenger\n~" },
     { "Guard | Tanner | Scavenger | Guard", "Guard\nTanner\nScavenger\nGuard" },
+    { "Deathstalker l Travelling Sword-For-Hire", "Deathstalker\nTravelling Sword-For-Hire" },
+    { "Evocator Tenebrosus / Afflicted Afflictor / Shadow of the Gallows", "Evocator Tenebrosus\nAfflicted Afflictor\nShadow of the Gallows" },
+    { "Scout/Ranger / |Hitem:1|hSilver / Gold|h", "Scout/Ranger\n|Hitem:1|hSilver / Gold|h" },
+    { "|Hitem:1|hSilver l Gold|h l Locksmith", "|Hitem:1|hSilver l Gold|h\nLocksmith" },
 }) do
     records.B.title = case[1]
     updateTitle(plate); assert(plate.npcTitle.text == case[2], case[1])
