@@ -126,6 +126,47 @@ local function HasTitleText(text)
     return visible:find("%S") ~= nil
 end
 
+local closingMark = { ["<"] = ">", ["["] = "]", ["("] = ")", ["{"] = "}",
+    ["«"] = "»", ["‹"] = "›", ["【"] = "】", ["《"] = "》" }
+
+local function UnframeRows(rows)
+    local n = #rows
+    while true do
+        local first, last = rows[1], rows[n]
+        local left = first:match("^([^\128-\191][\128-\191]*)")
+        if not left then return end
+        local right = closingMark[left]
+        if not right then
+            -- Symmetric ornaments: common ASCII flourishes, dots, and Unicode
+            -- shapes/symbols/dingbats (U+2500..27BF). Never guess at letters.
+            if not (left == "*" or left == "~" or left == "=" or left == "·" or left == "•"
+                or left:match("^\226[\148-\158][\128-\191]$")) then return end
+            right = left
+        end
+        local edge = #left
+        while first:sub(edge + 1, edge + #left) == left do edge = edge + #left end
+        local tail = right:rep(edge / #left)
+        if last:sub(-#tail) ~= tail then return end
+        if edge == #first and last == tail then
+            -- Separators can put the frame on rows of its own. Keep a
+            -- single enclosed role framed, and leave interior rows verbatim.
+            if n >= 4 then
+                rows[n] = nil
+                table.remove(rows, 1)
+            end
+            return
+        end
+        local a, b = strtrim(first:sub(edge + 1)), strtrim(last:sub(1, -#tail - 1))
+        if not HasTitleText(a) or not HasTitleText(b) then return end
+        -- If a mark also occurs inside, it may belong to an individual role.
+        for i = 1, n do
+            local text = i == 1 and a or i == n and b or rows[i]
+            if text:find(left, 1, true) or text:find(right, 1, true) then return end
+        end
+        rows[1], rows[n] = a, b
+    end
+end
+
 -- Candidate bytes include the UTF-8 lead bytes of │ and ｜. Match the
 -- complete character before splitting; skip separators inside inline markup.
 local titleMarks = "[|%->\226\239]"
@@ -167,6 +208,7 @@ local function FullTitleRows(title)
     if start == 1 then return title end
     local row = strtrim(title:sub(start))
     if HasTitleText(row) then rows[#rows + 1] = row end
+    if #rows > 1 then UnframeRows(rows) end
     if #rows > 0 then return table.concat(rows, "\n") end
 end
 

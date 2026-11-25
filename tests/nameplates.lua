@@ -278,6 +278,32 @@ updateTitle(plate)
 assert(plate.npcTitle.text == "Wanderer\nAlchemist\nHalf-Elf\nExplorer- Keeper -Warden")
 records.B.title = "< Explorer >   < Paladin >< Blacksmith >"
 updateTitle(plate); assert(plate.npcTitle.text == "< Explorer >\n< Paladin >\n< Blacksmith >")
+for _, framed in ipairs({ "< • [ Tanner - Tea Lover - Scavenger ] • >", "• [Tanner - Tea Lover - Scavenger] •" }) do
+    records.B.title = framed
+    updateTitle(plate); assert(plate.npcTitle.text == "Tanner\nTea Lover\nScavenger")
+end
+records.B.title = "< • [ Tea Lover ] • >"
+updateTitle(plate); assert(plate.npcTitle.text == records.B.title)
+records.B.title = "• [Tanner] • - • [Scavenger] •"
+updateTitle(plate); assert(plate.npcTitle.text == "• [Tanner] •\n• [Scavenger] •")
+records.B.title = "« ✦✦ {Éclaireur │ 茶師} ✦✦ »"
+updateTitle(plate); assert(plate.npcTitle.text == "Éclaireur\n茶師")
+records.B.title = "★ Keeper - Seeker ☆"
+updateTitle(plate); assert(plate.npcTitle.text == "★ Keeper\nSeeker ☆")
+records.B.title = "Érudite - Été"
+updateTitle(plate); assert(plate.npcTitle.text == "Érudite\nÉté")
+for _, case in ipairs({
+    { "◆ | Tanner | Scavenger | ◆", "Tanner\nScavenger" },
+    { "« | Tanner | ★ | Scavenger | »", "Tanner\n★\nScavenger" },
+    { "~~ | Tanner | Scavenger | ~~", "Tanner\nScavenger" },
+    { "• | Tanner | •", "•\nTanner\n•" },
+    { "◆ | Tanner | Scavenger", "◆\nTanner\nScavenger" },
+    { "~~ | Tanner | Scavenger | ~", "~~\nTanner\nScavenger\n~" },
+    { "Guard | Tanner | Scavenger | Guard", "Guard\nTanner\nScavenger\nGuard" },
+}) do
+    records.B.title = case[1]
+    updateTitle(plate); assert(plate.npcTitle.text == case[2], case[1])
+end
 records.B.title = "Knight of the Silver Hand │ Veteran of the Third War｜Explorer"
 updateTitle(plate); assert(plate.npcTitle.text == "Knight of the Silver Hand\nVeteran of the Third War\nExplorer")
 records.B.title = "|Hitem:1|h<First><Second>|h │ Keeper’s Oath > All"
