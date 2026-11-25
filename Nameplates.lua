@@ -94,20 +94,97 @@ local function PaintBar(p)
     if r then np.BarColor(p, r, g, b) end
 end
 
+-- strtrim handles ordinary spaces. Check a copy for common invisible UTF-8
+-- characters and WoW colour escapes; keep visible titles exactly as supplied.
+local function HasTitleText(text)
+    if not text or text == "" then return false end
+    if not text:find("[|\128-\255]") then return true end -- already trimmed
+    local visible = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    visible = visible:gsub("\194\160", "")                 -- non-breaking space
+        :gsub("\226\128[\128-\143]", "")                  -- U+2000..200F spaces and zero-width marks
+        :gsub("\226\128\175", ""):gsub("\226\129\160", "") -- narrow NBSP and word joiner
+        :gsub("\239\187\191", "")                          -- zero-width no-break space
+    return visible:find("%S") ~= nil
+end
+
+-- Candidate bytes include the UTF-8 lead bytes of │ and ｜. Match the
+-- complete character before splitting; skip separators inside inline markup.
+local titleMarks = "[|%->\226\239]"
+local function FullTitleRows(title)
+    local mark = title and title:find(titleMarks)
+    if not mark then return title end
+    local rows, start, coloured = {}, 1, false
+    while mark do
+        local code = title:sub(mark + 1, mark + 1)
+        local _, last, rowEnd, nextStart
+        local char = title:sub(mark, mark)
+        if char == ">" then
+            -- Keep both brackets on their respective rows, even with no gap.
+            _, nextStart = title:find("^>%s*<", mark)
+            if nextStart then rowEnd = mark else last = mark end
+        elseif char == "\226" or char == "\239" then
+            local glyph = title:sub(mark, mark + 2)
+            if glyph == "│" or glyph == "｜" then nextStart = mark + 3 else last = mark end
+        elseif char == "-" then
+            if code ~= " " or title:sub(mark - 1, mark - 1) ~= " " then last = mark end
+        elseif code == "c" then
+            _, last = title:find("^|c%x%x%x%x%x%x%x%x", mark)
+            if last then coloured = true end
+        elseif code == "r" and coloured then
+            last, coloured = mark + 1, false
+        elseif code == "T" or code == "A" or code == "H" then
+            local close = "|" .. code:lower()
+            _, last = title:find(close, mark + 2, true)
+            if last and code == "H" then _, last = title:find(close, last + 1, true) end
+        end
+        if not last then
+            local row = strtrim(title:sub(start, rowEnd or mark - 1))
+            if HasTitleText(row) then rows[#rows + 1] = row end
+            start = nextStart or (mark + (code == "|" and 2 or 1))
+            last = start - 1
+        end
+        mark = title:find(titleMarks, last + 1)
+    end
+    if start == 1 then return title end
+    local row = strtrim(title:sub(start))
+    if HasTitleText(row) then rows[#rows + 1] = row end
+    if #rows > 0 then return table.concat(rows, "\n") end
+end
+
+local wrappedTitles = setmetatable({}, { __mode = "k" })
+
 local function PaintTitle(p)
     if not Live(p) then return end
     seen[p] = true
     local label = p.npcTitle
+    -- The host creates a no-wrap label. Restore that setting before any
+    -- fallback, including a reused plate that now belongs to an NPC.
+    if label and wrappedTitles[label] then
+        label:SetWordWrap(false)
+        if p.nameOnly then p.name:SetPoint("CENTER", p.box, "CENTER", 0, 0) end
+        wrappedTitles[label] = nil
+    end
     if not (titles and label and p.nameOnly and p.tdb and p.tdb.showTitles) then return end
     if p.kind ~= "friendlyPlayer" and p.kind ~= "enemyPlayer" then return end
     if not label:IsShown() and UnitPVPName and not canaccessvalue((UnitPVPName(p.unit))) then return end
     local title = ns.ProfileTitle(ns.Profile(p.unit), titles)
+    if not HasTitleText(title) then return end
+    if titles == "full" then title = FullTitleRows(title) end
     if not title then return end
+    if titles == "full" and title:find("\n", 1, true) then
+        label:SetWordWrap(true)
+        wrappedTitles[label] = true
+    end
     label:SetText(title)
     if not label:IsShown() then
         local c = FlareUI.PALETTE.bronze5
         label:SetTextColor(c[1], c[2], c[3], 1)
         label:Show()
+    end
+    if wrappedTitles[label] then
+        -- Move the existing centre anchor, not the plate or its hit area.
+        -- The title and guild follow the name through FlareUI's own anchors.
+        p.name:SetPoint("CENTER", p.box, "CENTER", 0, label:GetStringHeight() + 1)
     end
 end
 

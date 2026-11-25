@@ -241,6 +241,13 @@ plate.tdb.guildColor = true
 handlers.flareui_rp_plate_guild_colours(nil, false); assert(plate.name.red == 0.5)
 handlers.flareui_rp_plate_guild_colours(nil, true)
 plate.npcTitle = { SetText = label.SetText, IsShown = label.IsShown, Show = label.Show, SetTextColor = label.SetTextColor }
+function plate.npcTitle:SetWordWrap(on) self.wrap = on end
+function plate.npcTitle:GetStringHeight() return 32 end
+plate.box = {}
+function plate.name:SetPoint(point, box, relative, x, y)
+    assert(point == "CENTER" and box == plate.box and relative == "CENTER" and x == 0)
+    self.lift = y
+end
 plate.tdb.showTitles, plate.tdb.showGuild = true, true
 records.B.title = "  Keeper of the Watch  "
 handlers.flareui_rp_plate_guilds(nil, true)
@@ -248,14 +255,42 @@ local updateTitle = FlareUI.Nameplates.UpdateTitle
 updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
 handlers.flareui_rp_plate_titles(nil, "full")
 assert(plate.npcTitle.text == "Keeper of the Watch" and label.anchor == plate.npcTitle)
+records.B.title = "Knight of the Silver Hand || Veteran of the Third War"
+updateTitle(plate)
+assert(plate.npcTitle.wrap and plate.npcTitle.text == "Knight of the Silver Hand\nVeteran of the Third War")
+assert(plate.name.lift == 33 and label.anchor == plate.npcTitle)
+handlers.flareui_rp_plate_titles(nil, "none")
+assert(plate.npcTitle.wrap == false and not plate.npcTitle.shown and label.anchor == plate.name)
+assert(plate.name.lift == 0)
+handlers.flareui_rp_plate_titles(nil, "full")
+records.B.title = " | Keeper || |   |cffff0000Warden|r|Herald | "
+updateTitle(plate)
+assert(plate.npcTitle.text == "Keeper\n|cffff0000Warden|r\nHerald" and label.anchor == plate.npcTitle)
+records.B.title = " || | "
+updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
+local invisible = "|cffff0000 \194\160\226\128\139|r" -- NBSP and zero-width space
+records.B.title = invisible
+updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
+records.B.title = "Étoile\194\160du Nord | " .. invisible .. " | Warden"
+updateTitle(plate); assert(plate.npcTitle.text == "Étoile\194\160du Nord\nWarden")
+records.B.title = "Wanderer - Alchemist | Half-Elf - Explorer- Keeper -Warden"
+updateTitle(plate)
+assert(plate.npcTitle.text == "Wanderer\nAlchemist\nHalf-Elf\nExplorer- Keeper -Warden")
+records.B.title = "< Explorer >   < Paladin >< Blacksmith >"
+updateTitle(plate); assert(plate.npcTitle.text == "< Explorer >\n< Paladin >\n< Blacksmith >")
+records.B.title = "Knight of the Silver Hand │ Veteran of the Third War｜Explorer"
+updateTitle(plate); assert(plate.npcTitle.text == "Knight of the Silver Hand\nVeteran of the Third War\nExplorer")
+records.B.title = "|Hitem:1|h<First><Second>|h │ Keeper’s Oath > All"
+updateTitle(plate); assert(plate.npcTitle.text == "|Hitem:1|h<First><Second>|h\nKeeper’s Oath > All")
 gameTitle = secret; updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
 gameTitle = "Corporal"; records.B.title = " "
 callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush(); assert(plate.npcTitle.text == "Corporal")
 records.B.title = "Keeper"; plate.tdb.showTitles = false; updateTitle(plate); assert(not plate.npcTitle.shown)
 plate.tdb.showTitles = true; updateTitle(plate); assert(plate.npcTitle.text == "Keeper")
 handlers.flareui_rp_plate_titles(nil, "short"); assert(plate.npcTitle.text == "Corporal")
-records.B.shortTitle = "Dame"; callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
-assert(plate.npcTitle.text == "Dame")
+records.B.shortTitle = invisible; updateTitle(plate); assert(plate.npcTitle.text == "Corporal")
+records.B.shortTitle = "Dame | Keeper - Warden"; callbacks.REGISTER_DATA_UPDATED(nil, "B"); flush()
+assert(plate.npcTitle.text == records.B.shortTitle)
 handlers.flareui_rp_plate_titles(nil, "none"); assert(plate.npcTitle.text == "Corporal")
 plate.gamePlate, plate.unit = nil, nil
 callbacks.REGISTER_PROFILE_DELETED(); queued()
