@@ -1,3 +1,7 @@
+# FlareUI RP 0.6.1 — Nameplate Colour Refresh
+
+- Fixed a delay updating player nameplate health bars after a colour restriction ends. With FlareUI 7.0.13, a TRP3 profile update can now restore the RP colour immediately. While the colour or player identity is restricted, the bar keeps FlareUI’s colour.
+
 # FlareUI RP 0.6.0 — TRP3 Main Window Styling
 
 - The Total RP 3 main window now uses FlareUI’s bronze frame and stone background. Character-sheet parchment and custom artwork stay visible. To restore TRP3’s appearance, turn off **Use FlareUI Styling** under **Total RP 3 > Settings > FlareUI RP > TRP3 Main Window**. The toolbar and target bar have separate controls.
