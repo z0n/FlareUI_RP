@@ -1,32 +1,51 @@
 # FlareUI RP
 
-FlareUI RP brings Total RP 3 names and colours to FlareUI frames and nameplates in **WoW: Forever**, with optional FlareUI styling for TRP3.
+FlareUI RP shows Total RP 3 names and colours on FlareUI unit frames and nameplates in **WoW: Forever**. It can also style the TRP3 interface.
 
 ## Install and configure
 
-1. Install FlareUI RP alongside [FlareUI](https://www.curseforge.com/wow/addons/flareui) and [Total RP 3](https://www.curseforge.com/wow/addons/total-rp-3). For a manual install, extract the **addon ZIP** from [GitHub Releases](https://github.com/z0n/FlareUI_RP/releases) into `Interface/AddOns/` so `FlareUI_RP/FlareUI_RP.toc` sits inside.
+1. Install FlareUI RP alongside [FlareUI](https://www.curseforge.com/wow/addons/flareui) and [Total RP 3](https://www.curseforge.com/wow/addons/total-rp-3).
 2. Enable **Unit Frames**, **Nameplates**, or both in FlareUI.
-3. Open **Total RP 3 > Settings > FlareUI RP**. RP names and profile colours are on by default; titles, guild names and guildmate colours are opt-in.
+3. Open **Total RP 3 > Settings > FlareUI RP**. RP names and colours are on by default.
+
+**Manual install:** Extract the **addon ZIP** from [GitHub Releases](https://github.com/z0n/FlareUI_RP/releases) into `Interface/AddOns/`. Check that `Interface/AddOns/FlareUI_RP/FlareUI_RP.toc` exists.
 
 ## RP names and colours
 
-Each label can show the first, last or full RP name. A missing surname falls back to the first name. Missing names or colours keep their FlareUI defaults until profile data arrives.
+Players and linked companions share the same settings. You can use RP names, RP colours or both. If a profile lacks a name or colour, FlareUI keeps its usual one.
 
-- **Unit frames:** Enable **Look > Class Colours** for RP health colours. For party or raid, select the frame in Edit Mode. Health warnings and gradients take priority.
-- **Player nameplates:** Choose **Class & Reaction** for RP health colours. Class-coloured names also use RP colours; party, raid and guild colours take priority. **Names Above Plate** has its own name format.
-- **Pets and minions:** Linked TRP3 companions show their names on supported frames and nameplates. **Use Companion Name Colours** colours names on full plates only. For companion titles, enable **Show Titles** on the relevant **Name Only** plate type (usually **Minor**) and select either RP title option.
+Player names follow each label’s first, last or full name setting. A missing surname falls back to the first name. **Names Above Plate** has its own name format.
 
-On friendly or enemy **Name Only** player plates:
+### Unit frames
 
-- **Titles:** Enable FlareUI’s **Show Titles** and choose a short or full RP title. Full titles can span multiple lines and fall back to the short title when empty. If no title is available for your choice, FlareUI keeps its usual line.
-- **Guilds:** Enable **Show Guild Name** and **Use RP Guild Names** to show the guild from TRP3 Characteristics, even without an in-game guild.
-- **Guildmate colours:** On friendly plates, **Colour RP Guild Members** extends FlareUI’s **Colour Guild Members** to players with the same TRP3 guild as you, even when guild names are hidden.
+RP colours affect the **health bar**. Names inside and above the frame keep FlareUI’s text colour.
+
+For the Pet frame, use **RP Health Bar Colours > Pet**. For other frames, also enable **Look > Class Colours** in FlareUI’s Edit Mode. Health warnings and gradients keep priority.
+
+### Nameplates
+
+- **Name Only:** The name uses the profile colour.
+- **Full plates:** Enable **Colour Names by Class** for the name. Choose **Class & Reaction** for the health bar.
+
+Party, raid and guild name colours keep priority.
+
+### Optional titles and guilds
+
+These features are off by default and apply to **Name Only** plates.
+
+- **Titles:** Enable **Show Titles** for the plate type (usually **Minor** for pets). In FlareUI RP, choose **Short title** or **Full title**. Full titles can span multiple lines. A missing full player title falls back to the short title. Companions use their single title in either mode.
+- **Guild names:** Enable **Show Guild Name** in FlareUI and **Use RP Guild Names** in FlareUI RP. Player plates then show the guild from TRP3 Characteristics, even without an in-game guild.
+- **Guildmate colours:** Enable **Colour Guild Members** and **Colour RP Guild Members** to highlight friendly players who share your TRP3 guild. This works even with guild names hidden.
 
 ## TRP3 appearance
 
-The main window uses FlareUI’s bronze and stone styling while keeping character-sheet parchment and custom artwork. The toolbar defaults to **Quest Tracker** style; the target bar and **At First Glance** panel use **Frames** by default. Toggle **Use FlareUI Styling** separately for the window, toolbar or target bar.
+Toggle **Use FlareUI Styling** separately for the main window, toolbar or target bar.
 
-With **Total RP 3: Extended**, main-window styling adds FlareUI’s bag-slot background to **Character > Inventory**. Borders follow **Skin Item Slots**: **Off** keeps native borders; **Thin** and **Thick** use bronze or, with **Colour by Rarity**, the item’s quality colour.
+- **Main window:** Bronze and stone styling keeps the character-sheet parchment and custom artwork.
+- **Toolbar:** Defaults to **Quest Tracker** style.
+- **Target bar and At First Glance panel:** Default to **Frames** style.
+
+With **Total RP 3: Extended**, main-window styling adds FlareUI bag slots to **Character > Inventory**. Set **Skin Item Slots** to **Off** for native borders, or choose **Thin** or **Thick** for bronze borders. Enable **Colour by Rarity** to use item quality colours instead.
 
 ## Development
 

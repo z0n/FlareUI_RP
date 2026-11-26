@@ -19,10 +19,14 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
     local r = records[id] or {}
     return { GetFirstName = function() return r.first end, GetFullName = function() return r.full end,
         GetLastName = function() return r.last end,
-        GetCustomColor = function() if r.rgb then return { GetRGB = function() return r.rgb, 0, 0 end } end end }
+        GetCharacteristics = function() return r end }
 end } }
 TRP3_Addon = {}
 TRP3_API = { GameEvents = {}, RegisterCallback = function(_, k, fn) events[k] = fn end }
+function strtrim(s) return s:match("^%s*(.-)%s*$") end
+function TRP3_API.ParseColorFromHexString(s)
+    return { GetRGB = function() return tonumber(s:sub(1, 2), 16) / 255, 0, 0 end }
+end
 C_Timer = { After = function(_, fn) assert(not queued); queued = fn end }
 local function flush() local fn = queued; queued = nil; fn() end
 local function Label()
@@ -49,7 +53,7 @@ assert(loadfile("Profile.lua"))("FlareUI_RP", ns)
 assert(loadfile("UnitHealth.lua"))("FlareUI_RP", ns)
 assert(loadfile("GroupFrames.lua"))("FlareUI_RP", ns)
 units.party1, units.raid1, units.boss1 = "A", "B", "A"
-records.A = { first = "Aster", full = "Aster Moonfall", rgb = 0.8 }
+records.A = { first = "Aster", full = "Aster Moonfall", CH = "cc0000" }
 ns.StartGroupFrames({ registerConfigKey = function(k, v) values[k] = v end, getValue = function(k) return values[k] end,
     registerHandler = function(k, fn) handlers[k] = fn end }, {})
 local function draw(f)
@@ -85,7 +89,7 @@ units.party1 = secret
 local beforeRestricted = lookups
 draw(party); assert(lookups == beforeRestricted and party.Name.text == secret)
 units.party1 = "A"
-records.B = { first = "Birch", full = "Birch Winter", rgb = 0.2 }
+records.B = { first = "Birch", full = "Birch Winter", CH = "330000" }
 local tank = Tile("raid1")
 tank.flareTile, tank.ctx = true, raid.ctx
 draw(tank)

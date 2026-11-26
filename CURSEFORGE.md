@@ -4,7 +4,7 @@
 
 - **RP names** follow FlareUI’s first, last or full name setting for each label.
 - **Profile colours** replace class colours while preserving health warnings and group colours.
-- **Linked pets and minions** can show their TRP3 name on frames and nameplates, their title on Name Only plates, and their optional profile name colour on full plates.
+- **Linked pets and minions** share players’ RP name and colour settings and can show titles on **Name Only** plates.
 
 ## Optional nameplate features
 

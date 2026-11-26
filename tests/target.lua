@@ -20,12 +20,12 @@ TRP3_NameUtil = { GetQualifiedName = function(unit) assert(not restricted and Un
 AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(key)
     local p = records[key] or {}
     return { GetFirstName = function() return p[1] end, GetFullName = function() return p[2] end,
-        GetLastName = function() return p[3] end, GetCustomColor = function() return nil end }
+        GetLastName = function() return p[3] end, GetCharacteristics = function() return nil end }
 end } }
 FlareUI = { db = { profile = { unitframes = { units = layouts } } },
     NameAbove = { SetName = function() end, Get = function(db) if db and db.kind then return "middle", db.kind end end },
     UnitFrames = { SetNameAbove = function() end, ShowsFullName = function(f) return f == playerFrame or full end },
-    UnitDisplayName = UnitNameUnmodified, ClassColorsOn = function() return true end, EditPreviewing = function() return false end }
+    UnitDisplayName = UnitNameUnmodified, ClassColorsOn = function(db) return db.classColor ~= false end, EditPreviewing = function() return false end }
 FlareUI.UnitFrames.FillSlots = function() end
 FlareUI.UnitFrames.HealthColorMode = function() return "off" end
 FlareUI.UnitFrames.HealthBarColor = function() return 1, 1, 1 end
@@ -43,7 +43,7 @@ TRP3_API.configuration = {
     registerConfigurationPage = function(page)
         local count = 0
         for _, element in ipairs(page.elements) do if element.configKey then count = count + 1 end end
-        assert(count == 6)
+        assert(count == 7)
     end,
 }
 C_Timer = { After = function(_, fn) assert(not queued); queued = fn end }
@@ -107,10 +107,29 @@ TRP3_API.globals = { player_id = "Self" }
 TRP3_API.ui = { misc = { getTargetType = function() return "pet" end,
     isTargetTypeACompanion = function(k) return k == "pet" end,
     getCompanionFullID = function() return "Self_Spider", "Self" end } }
+local petData = { NA = "  Silk  " }
 TRP3_API.companions = { player = { getCompanionProfile = function(k)
-    assert(k == "Spider"); return { data = { NA = "  Silk  " } }
+    assert(k == "Spider"); return { data = petData }
 end } }
 afterName(pet); assert(pet.Name.text == "Silk")
+pet.Health = { SetStatusBarColor = function(self, r) self.red = r end }
+layouts.pet = { kind = "fullname", classColor = false }
+pet.NameAboveText = aboveLabel()
+function UnitIsConnected() return true end
+function UnitIsTapDenied() return false end
+TRP3_API.ParseColorFromHexString = function(hex)
+    assert(hex == "330000")
+    return { GetRGB = function() return 0.2, 0, 0 end }
+end
+petData.NH = "330000"
+afterName(pet)
+assert(pet.Name.text == "Silk" and pet.NameAboveText.text == "Silk" and pet.Health.red == 0.2)
+handlers.flareui_rp_unit_names(nil, false)
+assert(pet.Name.text == "Forest Spider" and pet.NameAboveText.text == "Forest Spider" and pet.Health.red == 0.2)
+handlers.flareui_rp_pet_health(nil, false)
+assert(pet.Name.text == "Forest Spider" and pet.Health.red == 1)
+handlers.flareui_rp_unit_names(nil, true)
+assert(pet.Name.text == "Silk")
 restricted = true
 afterName(pet); assert(pet.Name.text == "Forest Spider")
 restricted = false

@@ -15,16 +15,32 @@ function ns.Profile(unit)
     return AddOn_TotalRP3.Player.CreateFromCharacterID(id), id
 end
 
-function ns.ProfileColor(profile)
-    local color = profile and profile:GetCustomColor()
-    if color then return color:GetRGB() end
-end
-
 local function Trimmed(name)
     if canaccessvalue(name) and type(name) == "string" then
         name = strtrim(name)
         if name ~= "" then return name end
     end
+end
+
+local function ParseProfileColor(value, forDisplay)
+    local hex = Trimmed(value)
+    if not hex then return end
+    local length = #hex - (hex:sub(1, 1) == "#" and 1 or 0)
+    -- TRP3 parses a leading hex colour even when the field contains trailing junk.
+    if (length ~= 3 and length ~= 4 and length ~= 6 and length ~= 8) or not hex:match("^#?%x+$") then return end
+    local color = TRP3_API.ParseColorFromHexString(hex)
+    if color and forDisplay then return TRP3_API.GenerateReadableColor(color, TRP3_API.Colors.Black) end
+    return color
+end
+
+function ns.PlayerColor(profile, forDisplay)
+    local characteristics = profile and profile:GetCharacteristics()
+    return characteristics and ParseProfileColor(characteristics.CH, forDisplay)
+end
+
+function ns.ProfileColor(profile, forDisplay)
+    local color = ns.PlayerColor(profile, forDisplay)
+    if color then return color:GetRGB() end
 end
 
 function ns.ProfileGuild(profile)
@@ -63,16 +79,13 @@ function ns.CompanionData(unit)
     elseif api.register and api.register.getCompanionProfile then
         profile = api.register.getCompanionProfile(id)
     end
-    return profile and profile.data
+    return profile and profile.data, id
 end
 
 function ns.CompanionName(data) return Trimmed(data and data.NA) end
 function ns.CompanionTitle(data) return Trimmed(data and data.TI) end
-function ns.CompanionNameColor(data)
-    local hex = Trimmed(data and data.NH)
-    if hex and hex:match("^%x%x%x%x%x%x$") then
-        return TRP3_API.GenerateReadableColor(TRP3_API.CreateColorFromHexString(hex), TRP3_API.Colors.Black)
-    end
+function ns.CompanionColor(data, forDisplay)
+    return ParseProfileColor(data and data.NH, forDisplay)
 end
 
 function ns.ProfileTitle(profile, mode)

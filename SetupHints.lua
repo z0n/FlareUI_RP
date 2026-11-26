@@ -1,5 +1,5 @@
 local _, ns = ...
-local labels = { player = "Player", target = "Target", focus = "Focus", targettarget = "Target of Target",
+local labels = { player = "Player", pet = "Pet", target = "Target", focus = "Focus", targettarget = "Target of Target",
     focustarget = "Target of Focus", party = "Party", raid = "Raid" }
 local groupFrames = { party = "FlareUI_Party", raid = "FlareUI_Raid" }
 
@@ -22,10 +22,10 @@ local function FrameHint(unit)
     local db = groupFrames[unit] and uf[unit] or (uf.units and uf.units[unit])
     if not db then return end
     local label = labels[unit]
-    if db.enabled == false then return label .. " frames are switched off in FlareUI.", "uf" end
+    if db.enabled == false then return label .. " frames are switched off in FlareUI.", "uf", "settings" end
     if unit == "party" then db = db[db.style == "raid" and "raid" or "classic"] end
     if not db then return end
-    local classOff = not FlareUI.ClassColorsOn(db)
+    local classOff = unit ~= "pet" and not FlareUI.ClassColorsOn(db)
     local gradient = FlareUI.UnitFrames.HealthColorMode(db) == "health"
     if not (classOff or gradient) then return end
     local fix = classOff and "turn on Look > Class Colours" or ""
@@ -100,20 +100,37 @@ local function GuildColourHint()
     if hint then return "For RP guildmate colours: " .. hint, "np", "visibility" end
 end
 
+local plateLabels = { friendlyPlayer = "Friendly Player", enemyPlayer = "Enemy Player", minor = "Minor" }
+
+local function HasFullPlateName(np, db)
+    if np.NameAbovePick(db) then return true end
+    for _, fields in pairs(np.TextSlots(db)) do
+        if FlareUI.BarText.NameOf(fields) then return true end
+    end
+    return false
+end
+
 local function PlateHint()
     local np = ActiveNameplates()
     if not np then return end
-    local blocked = {}
-    for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
+    local combat = np.CombatList(true) -- selected profile, even while live plates await combat end
+    local bars, names = {}, {}
+    for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer", "minor" }) do
         local db = np.TypeDB(kind)
-        local hasBar = db and db.plate and db.plate ~= "hidden" and (db.plate ~= "name" or db.nameOnlyTarget == true)
-        if hasBar and db.healthColor and db.healthColor ~= "class" then
-            blocked[#blocked + 1] = kind == "friendlyPlayer" and "Friendly Player" or "Enemy Player"
+        if db and db.plate and db.plate ~= "hidden" and (db.plate ~= "name" or db.nameOnlyTarget or combat[kind]) then
+            if db.healthColor and db.healthColor ~= "class" then bars[#bars + 1] = plateLabels[kind] end
+            if not db.nameClassColor and HasFullPlateName(np, db) then names[#names + 1] = plateLabels[kind] end
         end
     end
-    if #blocked > 0 then
-        return "For RP health bars, select " .. table.concat(blocked, " and ") ..
-            " in Plate Setup and choose Style > Look > Colour By > Class & Reaction.", "np", "style", "info"
+    local tips = {}
+    if #bars > 0 then
+        tips[#tips + 1] = "For RP health bars (" .. table.concat(bars, ", ") .. "): Style > Look > Colour By > Class & Reaction."
+    end
+    if #names > 0 then
+        tips[#tips + 1] = "For full-plate RP names (" .. table.concat(names, ", ") .. "): Style > Bar Text > Colour Names by Class."
+    end
+    if #tips > 0 then
+        return "Select the listed type in Plate Setup.\n" .. table.concat(tips, "\n"), "np", "style", "info"
     end
 end
 

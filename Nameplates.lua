@@ -1,5 +1,5 @@
 local _, ns = ...
-local np, names, colours, guilds, guildColours, titles, companionColours
+local np, names, colours, guilds, guildColours, titles
 local seen = setmetatable({}, { __mode = "k" })
 
 -- Run after the host has restored this plate's current name and colour.
@@ -34,16 +34,33 @@ local function SetName(label, name, prefix)
     if prefix then label:SetFormattedText("%s%s", prefix, name) else label:SetText(name) end
 end
 
+local function PaintNameColour(p, above, liftBarName, color)
+    if not color then return end
+    local r, g, b = color:GetRGB()
+    if above then p.aboveName:SetTextColor(r, g, b) end
+    if not p.nameSlot then return end
+    local lift = liftBarName and np.C and np.C.NAME_LIFT
+    if lift then
+        if canaccessallvalues(r, g, b) then
+            r, g, b = r + (1 - r) * lift, g + (1 - g) * lift, b + (1 - b) * lift
+        else
+            r, g, b = 1, 1, 1
+        end
+    end
+    p.name:SetTextColor(r, g, b)
+end
+
 local function Paint(p)
     if not Live(p) then return end
     seen[p] = true
-    if not (names or colours or guildColours or companionColours) then return end
+    if not (names or colours or guildColours) then return end
     local above = p.aboveKind and p.aboveName and p.aboveName:IsShown()
     if not (above or p.nameSlot) then return end
     local player = UnitIsPlayer(p.unit)
     if not canaccessvalue(player) then return end
     if not player then
-        if not (names or (companionColours and not p.nameOnly)) then return end
+        local canColour = colours and (p.nameOnly or (p.tdb and p.tdb.nameClassColor))
+        if not (names or canColour) then return end
         local data = ns.CompanionData(p.unit)
         if not data then return end
         local name = names and ns.CompanionName(data)
@@ -52,10 +69,12 @@ local function Paint(p)
             if p.nameSlot then SetName(p.name, name, prefix) end
             if above then SetName(p.aboveName, name, prefix) end
         end
-        local color = companionColours and not p.nameOnly and ns.CompanionNameColor(data)
-        if color then
-            if p.nameSlot then p.name:SetTextColor(color:GetRGB()) end
-            if above then p.aboveName:SetTextColor(color:GetRGB()) end
+        if canColour then
+            -- FlareUI only records aboveColor for players. Mirror its full-plate
+            -- bar-mode check for companions, keeping the above-name unlightened.
+            local mode = p.tdb and p.tdb.healthColor
+            local lift = not p.nameOnly and mode ~= "health" and mode ~= "reaction" and mode ~= "off"
+            PaintNameColour(p, above, lift, ns.CompanionColor(data, true))
         end
         return
     end
@@ -80,24 +99,7 @@ local function Paint(p)
     if not colours then return end
     local _, class = UnitClass(p.unit)
     if not (canaccessvalue(class) and class and C_ClassColor.GetClassColor(class)) then return end
-    local color = profile:GetCustomColorForDisplay()
-    if color then
-        local r, g, b = color:GetRGB()
-        if above then p.aboveName:SetTextColor(r, g, b) end
-        if p.nameSlot then
-            -- FlareUI saves the unlifted class colour only when it lightens
-            -- the in-bar label. Follow that decision on this paint.
-            local lift = p.aboveColor and np.C and np.C.NAME_LIFT
-            if lift then
-                if canaccessallvalues(r, g, b) then
-                    r, g, b = r + (1 - r) * lift, g + (1 - g) * lift, b + (1 - b) * lift
-                else
-                    r, g, b = 1, 1, 1
-                end
-            end
-            p.name:SetTextColor(r, g, b)
-        end
-    end
+    PaintNameColour(p, above, p.aboveColor, ns.PlayerColor(profile, true))
 end
 
 local function PaintBar(p)
@@ -109,8 +111,12 @@ local function PaintBar(p)
     local tapped, connected = UnitIsTapDenied(p.unit), UnitIsConnected(p.unit)
     if not canaccessallvalues(tapped, connected) or tapped or not connected then return end
     if p.tdb.colorFocus and p.gamePlate == C_NamePlate.GetNamePlateForUnit("focus") then return end
-    local r, g, b = ns.ProfileColor(ns.Profile(p.unit))
-    if r then np.BarColor(p, r, g, b) end
+    local player = UnitIsPlayer(p.unit)
+    if not canaccessvalue(player) then return end
+    local color
+    if player then color = ns.PlayerColor(ns.Profile(p.unit), false)
+    elseif not np.MobRGB(p.unit, p.tdb) then color = ns.CompanionColor(ns.CompanionData(p.unit), false) end
+    if color then np.BarColor(p, color:GetRGB()) end
 end
 
 -- strtrim handles ordinary spaces. Check a copy for common invisible UTF-8
@@ -309,7 +315,7 @@ end
 
 local queued
 local function Queue(id)
-    if not (names or colours or guilds or guildColours or titles or companionColours) then return end
+    if not (names or colours or guilds or guildColours or titles) then return end
     local scheduled = queued ~= nil
     if not id then queued = true
     elseif queued ~= true then
@@ -320,7 +326,7 @@ local function Queue(id)
     C_Timer.After(0, function()
         local batch = queued
         queued = nil
-        if names or colours or guilds or guildColours or titles or companionColours then Refresh(colours, batch ~= true and batch or nil) end
+        if names or colours or guilds or guildColours or titles then Refresh(colours, batch ~= true and batch or nil) end
     end)
 end
 
@@ -335,15 +341,9 @@ function ns.StartNameplates(config, elements)
     config.registerHandler(colourKey, function(_, on) colours = on; Refresh(true) end)
     elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = nameKey, title = "Use RP Names",
         help = "Use player or linked companion RP names on or above the plate. Player names follow each label's name format." }
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Name and Bar Colours",
-        help = "Replace player class colours with profile colours. For health bars, choose Class & Reaction in FlareUI. For names, use Name Only or enable Colour Names by Class on full plates. Party, raid and guild name colours keep priority." }
+    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = colourKey, title = "Use RP Colours",
+        help = "Use profile colours for player and linked companion names on Name Only plates. On full plates, enable Colour Names by Class for names and choose Class & Reaction for health bars. Group colours and health warnings keep priority." }
     hooksecurefunc(np, "UpdateName", Paint)
-    local companionKey = "flareui_rp_plate_companion_colours"
-    config.registerConfigKey(companionKey, false)
-    companionColours = config.getValue(companionKey)
-    config.registerHandler(companionKey, function(_, on) companionColours = on; Refresh(false) end)
-    elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = companionKey, title = "Use Companion Name Colours",
-        help = "Use a linked companion's profile colour for its name on full plates. Name Only plates keep their reaction colour." }
     if np.UpdateTitleLine and np.UpdateTitle then
         local key = "flareui_rp_plate_titles"
         config.registerConfigKey(key, "none")
@@ -383,7 +383,7 @@ function ns.StartNameplates(config, elements)
         TRP3_API.RegisterCallback(TRP3_Addon, event, QueueAll)
     end
     TRP3_API.RegisterCallback(TRP3_Addon, "CONFIGURATION_CHANGED", function(_, key)
-        if (colours or companionColours) and key == "color_contrast_level" then Queue() end
+        if colours and key == "color_contrast_level" then Queue() end
     end)
     TRP3_API.RegisterCallback(TRP3_API.GameEvents, "PLAYER_REGEN_ENABLED", QueueAll)
 end

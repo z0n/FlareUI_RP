@@ -38,7 +38,7 @@ function hooksecurefunc(t, key, fn)
     local original = t[key]
     t[key] = function(p) original(p); fn(p) end
 end
-local records = { A = { "Aster", "Aster Moonfall", 0.8 }, Me = { guild = " NIGHT WATCH " } }
+local records = { A = { "Aster", "Aster Moonfall", "cc0000" }, Me = { guild = " NIGHT WATCH " } }
 local secret = {}
 local gameGuild
 local gameTitle
@@ -83,14 +83,22 @@ AddOn_TotalRP3 = { Player = { CreateFromCharacterID = function(id)
         GetCustomGuildMembership = function() return { name = data.guild } end,
         GetFullTitle = function() return data.title end,
         GetTitle = function() return data.shortTitle end,
-        GetCustomColorForDisplay = function() if data[3] then return { GetRGB = function() return data[3], 0, 0 end } end end,
-        GetCustomColor = function() if data[3] then return { GetRGB = function() return data[3] / 2, 0, 0 end } end end }
+        GetCharacteristics = function() return { CH = data[3] } end }
 end } }
 AddOn_TotalRP3.Player.GetCurrentUser = function() return AddOn_TotalRP3.Player.CreateFromCharacterID("Me") end
 function strcmputf8i(a, b) return a:lower() == b:lower() and 0 or 1 end
 function strtrim(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end
 TRP3_Addon = {}
 TRP3_API = { globals = { player_id = "Me" }, GameEvents = {}, RegisterCallback = function(_, key, fn) callbacks[key] = fn end }
+TRP3_API.Colors = { Black = {} }
+local rawRed = { cc0000 = 0.4, ["990000"] = 0.3, ["000000"] = 0, bf0000 = 0.375, ff0000 = 0.5, ["#f00"] = 0.5 }
+function TRP3_API.ParseColorFromHexString(hex)
+    local red = assert(rawRed[hex], "unexpected input to TRP3 colour parser: " .. hex)
+    return { GetRGB = function() return red, 0, 0 end }
+end
+function TRP3_API.GenerateReadableColor(color)
+    return { GetRGB = function() return color:GetRGB() * 2, 0, 0 end }
+end
 C_Timer = { After = function(_, fn) assert(not queued); queued = fn end }
 assert(loadfile("Profile.lua"))("FlareUI_RP", ns)
 assert(loadfile("Nameplates.lua"))("FlareUI_RP", ns)
@@ -98,6 +106,7 @@ ns.StartNameplates({ registerConfigKey = function(k, v) values[k] = v end,
     getValue = function(k) return values[k] end, registerHandler = function(k, f) handlers[k] = f end }, elements)
 local function check(text, red) assert(plate.name.text == text and plate.name.red == red) end
 local paint = FlareUI.Nameplates.UpdateName
+FlareUI.Nameplates.MobRGB = function() end
 paint(plate); check("12 Aster", 0.8)
 plate.tdb.groupColor = true; paint(plate); check("12 Aster", 0.5)
 raid = true; paint(plate); check("12 Aster", 0.5)
@@ -127,12 +136,15 @@ plate.aboveKind = "lastname"
 paint(plate); assert(plate.aboveName.text == "12 Moonfall" and plate.name.text == "12 Aster Moonfall")
 plate.aboveKind = "firstname"
 paint(plate); assert(plate.aboveName.text == "12 Aster" and plate.name.text == "12 Aster Moonfall")
-records.A[3] = 0.6
+records.A[3] = "990000"
 local bar = FlareUI.Nameplates.UpdateColor
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == 0.3)
 plate.tdb.nameClassColor = true
 -- No lift from the host: keep the display colour.
 paint(plate); check("12 Aster Moonfall", 0.6); assert(plate.aboveName.red == 0.6)
+records.A[3] = "990000oops"
+paint(plate); bar(plate); check("12 Aster Moonfall", 0.5); assert(plate.fill == stockRed)
+records.A[3] = "990000"
 plate.aboveColor = {} -- stock UpdateBarName chose its in-bar contrast treatment
 paint(plate); bar(plate)
 check("12 Aster Moonfall", 0.84)
@@ -182,7 +194,7 @@ tapped = false; plate.nameOnly = true; plate.nameSlot = "left"; plate.aboveKind 
 paint(plate); bar(plate); check("12 Aster Moonfall", 0.6); assert(plate.fill == 0.4)
 person = "Spider"; paint(plate); check("12 Spider", 0.5)
 person = "B"; paint(plate); check("12 B", 0.5)
-records.B = { "Birch", "Birch Winter", 0 }
+records.B = { "Birch", "Birch Winter", "000000" }
 local n, b = namesPainted, barsPainted
 callbacks.REGISTER_DATA_UPDATED(nil, "A"); flush()
 assert(namesPainted == n and barsPainted == b, "unrelated character must not repaint the plate")
@@ -264,7 +276,7 @@ local updateTitle = FlareUI.Nameplates.UpdateTitle
 updateTitle(plate); assert(not plate.npcTitle.shown and label.anchor == plate.name)
 handlers.flareui_rp_plate_titles(nil, "full")
 assert(plate.npcTitle.text == "Keeper of the Watch" and label.anchor == plate.npcTitle)
-records.B[3] = 0.75
+records.B[3] = "bf0000"
 handlers.flareui_rp_plate_colours(nil, true)
 plate.tdb.guildColor = false
 paint(plate)
@@ -363,13 +375,10 @@ TRP3_API.companions = { register = { getCompanionProfile = function(id)
     if id == "Second-Realm_Spider" then secondLookups = secondLookups + 1; return { data = { NA = "Web" } } end
     assert(id == "Other-Realm_Spider"); return linked
 end } }
-TRP3_API.Colors = { Black = {} }
-TRP3_API.CreateColorFromHexString = function(hex) assert(hex == "ff0000"); return { GetRGB = function() return 1, 0, 0 end } end
-TRP3_API.GenerateReadableColor = function(c) return c end
 person, plate.kind, gameTitle = "Spider", "minor", "Other's Pet"
 handlers.flareui_rp_plate_names(nil, true)
 handlers.flareui_rp_plate_titles(nil, "short")
-handlers.flareui_rp_plate_companion_colours(nil, true)
+handlers.flareui_rp_plate_colours(nil, true)
 local second = { unit = "nameplate2", gamePlate = plate.gamePlate, kind = "minor", nameOnly = true,
     nameSlot = "left", tdb = {}, name = { SetText = plate.name.SetText, SetTextColor = plate.name.SetTextColor } }
 paint(second); assert(second.name.text == "Web")
@@ -377,12 +386,38 @@ linked = { data = { NA = "Silk", TI = "The Weaver", NH = "ff0000" } }
 local beforeUpdate = namesPainted
 callbacks.REGISTER_DATA_UPDATED(nil, "Other-Realm_Spider"); flush()
 assert(namesPainted == beforeUpdate + 1 and secondLookups == 1, "same pet name, different owner must not repaint")
-assert(plate.name.text:match("Silk$") and plate.name.red == 0.5 and plate.npcTitle.text == "The Weaver")
+assert(plate.name.text:match("Silk$") and plate.name.red == 1 and plate.npcTitle.text == "The Weaver")
+handlers.flareui_rp_plate_colours(nil, false)
+assert(plate.name.red == 0.5, "disabling companion colours restores the Name Only reaction colour")
+handlers.flareui_rp_plate_names(nil, false)
+handlers.flareui_rp_plate_colours(nil, true)
+assert(plate.name.text:match("Spider$") and plate.name.red == 1, "Name Only pet colour works independently of RP names")
+handlers.flareui_rp_plate_names(nil, true)
 assert(isParchment(plate.npcTitle) and not label.shown, "recycled companion plate keeps the title parchment and hides the guild")
-plate.nameOnly = false
+linked.data.NH, linked.data.TI = "#f00", "Scout / Tracker"
+updateTitle(plate)
+assert(plate.npcTitle.text == "Scout / Tracker" and not plate.npcTitle.wrap)
+handlers.flareui_rp_plate_titles(nil, "full")
+assert(plate.npcTitle.text == "Scout\nTracker" and plate.npcTitle.wrap and plate.name.red == 1)
+for _, invalid in ipairs({ "no colour", "default", "#f00!", "ffff00000", "fffff" }) do
+    linked.data.NH = invalid
+    callbacks.REGISTER_DATA_UPDATED(nil, nil, "companion-profile"); flush()
+    assert(plate.name.red == 0.5 and plate.name.text:match("Silk$"), "an invalid colour leaves the reaction colour and RP name")
+end
+linked.data.NH = "ff0000"
+plate.nameOnly, plate.aboveKind, plate.tdb.nameClassColor = false, "firstname", false
+paint(plate)
+assert(plate.name.text:match("Silk$") and plate.name.red == 0.5 and plate.aboveName.red == 0.5)
+plate.tdb.nameClassColor = true
 linked.data.NA = nil
 paint(plate); assert(plate.name.text:match("Spider$") and plate.name.red == 1)
-FlareUI.Nameplates.UpdateColor(plate); assert(plate.fill == stockRed)
+assert(plate.name.green == 0.6 and plate.aboveName.green == 0, "only the in-bar companion name is lightened")
+plate.tdb.healthColor = "reaction"
+paint(plate); assert(plate.name.green == 0 and plate.name.red == 1)
+plate.tdb.healthColor = "class"
+FlareUI.Nameplates.UpdateColor(plate); assert(plate.fill == 0.5)
+plate.threatRGB = {}; bar(plate); assert(plate.fill == stockRed)
+plate.threatRGB = nil
 callbacks.REGISTER_DATA_UPDATED(nil, "Other-Realm_Spider")
 owner = secret
 flush(); assert(plate.name.red == 0.5, "restricted identity at flush must restore the host colour")

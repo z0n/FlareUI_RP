@@ -1,15 +1,21 @@
 -- Exercise the settings page lifecycle with the same registered rows TRP3 uses.
-local ns = { directFrames = { target = "FlareUI_UF_Target" } }
+local ns = { directFrames = { target = "FlareUI_UF_Target", pet = "FlareUI_UF_Pet" } }
 local values, combat, opened, hidden = {}, false
 local target = { classColor = false, healthColor = "health" }
 local party = { style = "raid", raid = { classColor = true }, classic = { classColor = false } }
 local plates = { friendlyPlayer = { plate = "name", healthColor = "reaction" },
-    enemyPlayer = { plate = "full", healthColor = "health" } }
-local profile = { unitframes = { units = { target = target }, party = party }, nameplates = {} }
-FlareUI_UF_Target, FlareUI_Party = {}, {}
+    enemyPlayer = { plate = "full", healthColor = "health", nameClassColor = true } }
+local combatTypes = {}
+local pet = { classColor = false }
+local profile = { unitframes = { units = { target = target, pet = pet }, party = party }, nameplates = {} }
+FlareUI_UF_Target, FlareUI_UF_Pet, FlareUI_Party = {}, {}, {}
 FlareUI = { db = { profile = profile }, ClassColorsOn = function(db) return db.classColor ~= false end,
     UnitFrames = { HealthColorMode = function(db) return db.healthColor end },
-    Nameplates = { TypeDB = function(kind) return plates[kind] end },
+    BarText = { NameOf = function(fields) return fields.firstname end },
+    Nameplates = { TypeDB = function(kind) return plates[kind] end,
+        CombatList = function(preview) return preview and combatTypes or {} end,
+        TextSlots = function(db) return db.slots or { left = { firstname = 1 } } end,
+        NameAbovePick = function(db) return db.nameAbove end },
     Settings = { CanEditFrames = function() return not combat end,
         EditFrame = function(_, frame, module) opened = { frame, module }; return true end },
     SettingsPanel = { Open = function(_, key, tab) opened = { key, tab } end } }
@@ -27,7 +33,8 @@ titles.inherit = "TRP3_ConfigDropDown"
 local onTitleChange
 TRP3_API.configuration.registerHandler = function(key, fn) assert(key == titles.configKey); onTitleChange = fn end
 values[titles.configKey], values[gl.configKey], values[gc.configKey] = "none", false, false
-local elements = { t, g, n, gl, gc, titles }
+local petOption = checkbox("pet_health")
+local elements = { t, g, n, gl, gc, titles, petOption }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
 local function noop() end
@@ -90,6 +97,13 @@ assert(not w.Button.enabled and not opened and not hidden and not note)
 combat = false; w.OnEvent(); row.OnClick()
 assert(opened[1] == FlareUI_UF_Target and opened[2] == "uf" and note.shown)
 EditModeManagerFrame:OnHide(); assert(not note.shown)
+assert(not hints[petOption].widget.Button.shown, "the Pet frame has no Class Colours setting")
+pet.healthColor = "health"
+hints[petOption].widget.OnShow()
+assert(hints[petOption].widget.Title.text:find("Tint Health") and not hints[petOption].widget.Title.text:find("Class Colours"))
+hints[petOption].OnClick(); assert(opened[1] == FlareUI_UF_Pet and opened[2] == "uf")
+pet.enabled = false
+hints[petOption].OnClick(); assert(opened[1] == "uf" and opened[2] == "settings")
 target.classColor, target.healthColor = true, "low"
 tick()
 assert(not w.Button.shown and w.height == 1)
@@ -126,6 +140,21 @@ assert(plate.widget.Button.shown and plate.widget.Title.text:find("Friendly Play
 plates.friendlyPlayer.nameOnlyTarget = false
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
+plates.minor = { plate = "name", healthColor = "class" }
+combatTypes.minor = true
+plate.widget.OnShow()
+assert(plate.widget.Title.text:find("Minor") and plate.widget.Title.text:find("Style > Bar Text > Colour Names by Class"))
+plate.OnClick(); assert(opened[1] == "np" and opened[2] == "style")
+plates.minor.slots = { middle = { percent = 1 } }
+plate.widget.OnShow(); assert(not plate.widget.Button.shown, "a health-only layout has no name to colour")
+plates.minor.nameAbove = "left:firstname"
+plate.widget.OnShow(); assert(plate.widget.Button.shown and plate.widget.Title.text:find("Colour Names by Class"))
+plates.minor.nameClassColor = true
+plate.widget.OnShow(); assert(not plate.widget.Button.shown)
+plates.minor.healthColor = "reaction"
+plate.widget.OnShow(); assert(plate.widget.Button.shown and plate.widget.Title.text:find("Minor"))
+combatTypes.minor = nil
+plate.widget.OnShow(); assert(not plate.widget.Button.shown)
 local labelHint, colourHint = hints[gl].widget, hints[gc].widget
 assert(not labelHint.Title.shown and not colourHint.Title.shown)
 values[gl.configKey], values[gc.configKey] = true, true

@@ -10,17 +10,18 @@ end
 local function Paint(frame, restoreNames)
     local unit = ns.DirectUnit(frame)
     if not unit or not frame.Name or not ns.DirectExists(unit) or (FlareUI.EditPreviewing and FlareUI.EditPreviewing()) then return end
-    local rp
+    local rp, data
     if ns.unitHealthActive and ns.healthEnabled[unit] then
-        rp = ns.ReadHealthColor(unit)
+        rp, data = ns.ReadHealthColor(unit)
         ns.PaintHealth(frame, unit)
     elseif ns.namesEnabled then
         rp = ns.Profile(unit)
+        if not rp then data = ns.CompanionData(unit) end
     end
     if not ns.namesEnabled and not restoreNames then return end
     local full = FlareUI.UnitFrames.ShowsFullName(frame)
     if not ns.namesEnabled then rp = nil end
-    local companionName = ns.namesEnabled and not rp and ns.CompanionName(ns.CompanionData(unit))
+    local companionName = ns.namesEnabled and ns.CompanionName(data)
     local name = DisplayName(unit, full, rp, companionName)
     frame.Name:SetText(name)
 
@@ -82,12 +83,13 @@ local function StartUnitFrames(config, elements)
         help = "Use player and linked companion names on Player, Pet, Target, Focus, Target of Target and Target of Focus. FlareUI still controls which names appear." }
     if ns.unitHealthActive then
         elements[#elements + 1] = { inherit = "TRP3_ConfigH1", title = "RP Health Bar Colours" }
-        local labels = { player = "Player", target = "Target", focus = "Focus", targettarget = "Target of Target", focustarget = "Target of Focus" }
-        for _, unit in ipairs({ "player", "target", "focus", "targettarget", "focustarget" }) do
+        local labels = { player = "Player", pet = "Pet", target = "Target", focus = "Focus", targettarget = "Target of Target", focustarget = "Target of Focus" }
+        for _, unit in ipairs({ "player", "pet", "target", "focus", "targettarget", "focustarget" }) do
             local key = "flareui_rp_" .. unit .. "_health"
             HealthSetting(key, unit)
             elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = key, title = labels[unit],
-                help = "On the " .. labels[unit] .. " frame, use the player's profile colour when the health bar would show their class colour. Low-health warnings and gradients keep priority." }
+                help = unit == "pet" and "Use your linked pet's profile colour for its health bar. Health warnings and gradients keep priority."
+                    or "With Class Colours enabled, use the player or linked companion's profile colour for the health bar. Health warnings and gradients keep priority." }
         end
     end
     for _, event in ipairs({ "REGISTER_DATA_UPDATED", "REGISTER_PROFILES_LOADED", "REGISTER_PROFILE_DELETED" }) do

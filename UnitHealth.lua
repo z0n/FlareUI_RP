@@ -24,9 +24,16 @@ function ns.ReadHealthColor(unit, state)
     local s = state or states[unit]
     local profile, nextID = ns.Profile(unit)
     local nr, ng, nb = ns.ProfileColor(profile)
+    local data
+    s.companion = nil
+    if not state and not profile then
+        data, nextID = ns.CompanionData(unit)
+        local color = ns.CompanionColor(data, false)
+        if color then nr, ng, nb = color:GetRGB(); s.companion = true end
+    end
     if nr ~= s.r or ng ~= s.g or nb ~= s.b then s.curve = nil end
     s.r, s.g, s.b, s.id = nr, ng, nb, nextID
-    return profile
+    return profile, data
 end
 
 local function LowColor(tint, unit, s)
@@ -62,9 +69,13 @@ function ns.ApplyHealth(frame, unit, db, s, enabled)
     local player, connected, tapped = UnitIsPlayer(unit), UnitIsConnected(unit), UnitIsTapDenied(unit)
     if not canaccessallvalues(player, connected, tapped) then return end
     local mode = uf.HealthColorMode(db)
-    if enabled and s.r and FlareUI.ClassColorsOn(db) and mode ~= "health" then
-        if player and connected and not tapped
-            and canaccessallvalues(UnitNameUnmodified(unit)) and TRP3_NameUtil.GetQualifiedName(unit) == s.id then
+    if enabled and s.r and (unit == "pet" or FlareUI.ClassColorsOn(db)) and mode ~= "health" then
+        local matches
+        if connected and not tapped and canaccessallvalues(UnitNameUnmodified(unit)) then
+            if player and not s.companion then matches = TRP3_NameUtil.GetQualifiedName(unit) == s.id
+            elseif not player and s.companion then matches = ns.CompanionID(unit) == s.id end
+        end
+        if matches then
             if mode == "off" then
                 frame.Health:SetStatusBarColor(s.r, s.g, s.b)
                 s.applied = true
