@@ -1,5 +1,3 @@
-# FlareUI RP 0.8.0 — RP colours for linked pets and minions
+# FlareUI RP 0.8.1 — FlareUI 7.1 compatibility
 
-- **Use RP Colours** now covers players and linked companions alike, replacing **Use Companion Name Colours**. Companion names can use their profile colour on **Name Only** plates. On full plates, enable **Colour Names by Class** for names or choose **Class & Reaction** for health bars in FlareUI’s Plate Setup.
-- Linked companions can now show their profile colour on unit-frame health bars. For your own pet, use **Total RP 3 > Settings > FlareUI RP > RP Health Bar Colours > Pet**. Health warnings and gradients keep priority.
-- Nameplate setup hints now show which plate types need a setting change, including **Minor** plates that switch to a full plate in combat.
+- Nameplate setup hints now use FlareUI 7.1’s settings paths. On Name Only plates, find **Title** and **Guild** under **Under the Name**. For full plates, find **Colour Names by Class** under **Plate > Text** and **Colour By** under **Plate > Look**.
