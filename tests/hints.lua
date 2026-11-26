@@ -120,6 +120,12 @@ FlareUI_SettingsPanel:OnHide(); assert(not note.shown)
 plates.enemyPlayer.healthColor = "class"
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
+plates.friendlyPlayer.nameOnlyTarget = true
+plate.widget.OnShow()
+assert(plate.widget.Button.shown and plate.widget.Title.text:find("Friendly Player") and plate.widget.Title.text:find("Class & Reaction"))
+plates.friendlyPlayer.nameOnlyTarget = false
+plate.widget.OnShow()
+assert(not plate.widget.Button.shown)
 local labelHint, colourHint = hints[gl].widget, hints[gc].widget
 assert(not labelHint.Title.shown and not colourHint.Title.shown)
 values[gl.configKey], values[gc.configKey] = true, true

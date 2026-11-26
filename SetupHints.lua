@@ -106,7 +106,8 @@ local function PlateHint()
     local blocked = {}
     for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer" }) do
         local db = np.TypeDB(kind)
-        if db and db.plate and db.plate ~= "name" and db.plate ~= "hidden" and db.healthColor and db.healthColor ~= "class" then
+        local hasBar = db and db.plate and db.plate ~= "hidden" and (db.plate ~= "name" or db.nameOnlyTarget == true)
+        if hasBar and db.healthColor and db.healthColor ~= "class" then
             blocked[#blocked + 1] = kind == "friendlyPlayer" and "Friendly Player" or "Enemy Player"
         end
     end
