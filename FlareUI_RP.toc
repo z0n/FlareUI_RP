@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: FlareUI RP
 ## Notes: Total RP 3 names and colours on FlareUI frames and nameplates, and FlareUI styling for the Total RP 3 window and bars.
-## Version: 0.7.4
+## Version: 0.8.0
 ## X-Curse-Project-ID: 1824459
 ## Dependencies: FlareUI, totalRP3
 

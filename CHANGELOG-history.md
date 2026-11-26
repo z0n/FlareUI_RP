@@ -1,3 +1,7 @@
+# FlareUI RP 0.7.4 — FlareUI 7.0.17 compatibility
+
+- If you use **Name Only** with **Show Target’s Plate**, the setup hint now tells you when to choose **Class & Reaction** so the target’s health bar can use its RP colour.
+
 # FlareUI RP 0.7.3 — Full RP Title Line Breaks
 
 - On **Name Only** nameplates, full RP titles now start a new line at a slash (`/`) or lowercase L (`l`) with a space on each side. A title like `Scout/Ranger / Locksmith` displays `Scout/Ranger` on the first line and `Locksmith` on the second.
