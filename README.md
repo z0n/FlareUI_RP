@@ -31,10 +31,10 @@ Party, raid and guild name colours keep priority.
 
 ### Optional titles and guilds
 
-These features are off by default and apply to **Name Only** plates.
+These features are off by default and apply to **Name Only** plates. In FlareUI’s **Plate Setup**, select the plate type, then enable **Plate > Name Only Mode**.
 
-- **Titles:** Enable **Show Titles** for the plate type (usually **Minor** for pets). In FlareUI RP, choose **Short title** or **Full title**. Full titles can span multiple lines. A missing full player title falls back to the short title. Companions use their single title in either mode.
-- **Guild names:** Enable **Show Guild Name** in FlareUI and **Use RP Guild Names** in FlareUI RP. Player plates then show the guild from TRP3 Characteristics, even without an in-game guild.
+- **Titles:** Select **Under the Name > Title** for the plate type (usually **Minor** for pets). In FlareUI RP, choose **Short title** or **Full title**. Full titles can span multiple lines. A missing full player title falls back to the short title. Companions use their single title in either mode.
+- **Guild names:** Select **Under the Name > Guild** in FlareUI and enable **Use RP Guild Names** in FlareUI RP. Player plates then show the guild from TRP3 Characteristics, even without an in-game guild.
 - **Guildmate colours:** Enable **Colour Guild Members** and **Colour RP Guild Members** to highlight friendly players who share your TRP3 guild. This works even with guild names hidden.
 
 ## TRP3 appearance

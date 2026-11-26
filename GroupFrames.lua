@@ -45,9 +45,7 @@ end
 
 local function MemberName(f, unit, profile, restore)
     if not profile and not restore then return end
-    local full
-    if pf.NameFull then full = pf.NameFull(f)
-    elseif pf.SlotOn(f) and not (pf.SlotStyle and pf.SlotStyle(f) == "partytile") then full = f.btFullName ~= false end
+    local full = pf.NameFull(f)
     if full == nil then full = FlareUI.db.profile.unitframes.fullNames ~= false end
     PaintLabel(f.Name, unit, full, profile, restore)
 end
@@ -151,7 +149,7 @@ end
 function ns.StartGroupFrames(config, elements)
     pf = FlareUI.PartyFrames
     local uf = FlareUI.UnitFrames
-    if not (pf and pf.SlotOn and pf.NameAboveDb and FlareUI.NameAbove and FlareUI.NameAbove.Get
+    if not (pf and pf.SlotOn and pf.NameFull and pf.NameAboveDb and FlareUI.NameAbove and FlareUI.NameAbove.Get
         and FlareUI.NameAbove.SetName and FlareUI.EditPreviewing and FlareUI.UnitDisplayName) then return end
     local function Option(kind, item, title, help)
         local key = "flareui_rp_" .. kind .. "_" .. item

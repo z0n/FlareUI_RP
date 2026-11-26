@@ -86,7 +86,7 @@ local function LabelHint(key, feature, setting)
     end
     if visibility then return "For " .. feature .. ": " .. visibility, "np", "visibility" end
     local types = companionTitles and "Friendly Player, Enemy Player or Minor (companions)" or "Friendly Player or Enemy Player"
-    return "For " .. feature .. ", select " .. types .. " in Plate Setup. Under Style, enable Name Only Mode and " .. setting .. ".", "np", "style"
+    return "For " .. feature .. ", select " .. types .. " in Plate Setup. Enable Plate > Name Only Mode, then select Under the Name > " .. setting .. ".", "np", "style"
 end
 
 local function GuildColourHint()
@@ -94,7 +94,7 @@ local function GuildColourHint()
     local db = np and np.TypeDB("friendlyPlayer")
     if not db then return end
     if db.plate ~= "name" or not db.guildColor then
-        return "For RP guildmate colours, select Friendly Player in Plate Setup. Under Style, enable Name Only Mode and Colour Guild Members.", "np", "style"
+        return "For RP guildmate colours, select Friendly Player in Plate Setup. Enable Plate > Name Only Mode and turn on Colour Guild Members there.", "np", "style"
     end
     local hint = VisibilityHint(np, "friendlyPlayer")
     if hint then return "For RP guildmate colours: " .. hint, "np", "visibility" end
@@ -124,10 +124,10 @@ local function PlateHint()
     end
     local tips = {}
     if #bars > 0 then
-        tips[#tips + 1] = "For RP health bars (" .. table.concat(bars, ", ") .. "): Style > Look > Colour By > Class & Reaction."
+        tips[#tips + 1] = "For RP health bars (" .. table.concat(bars, ", ") .. "): Plate > Look > Colour By > Class & Reaction."
     end
     if #names > 0 then
-        tips[#tips + 1] = "For full-plate RP names (" .. table.concat(names, ", ") .. "): Style > Bar Text > Colour Names by Class."
+        tips[#tips + 1] = "For full-plate RP names (" .. table.concat(names, ", ") .. "): Plate > Text > Colour Names by Class."
     end
     if #tips > 0 then
         return "Select the listed type in Plate Setup.\n" .. table.concat(tips, "\n"), "np", "style", "info"
@@ -285,9 +285,9 @@ function ns.AddSetupHints(elements)
         elseif opt.configKey == "flareui_rp_plate_colours" then
             Hint(elements, i + 1, checks, PlateHint, opt)
         elseif opt.configKey == "flareui_rp_plate_guilds" then
-            Hint(elements, i + 1, checks, function() return LabelHint("showGuild", "RP guild names", "Show Guild Name") end, opt)
+            Hint(elements, i + 1, checks, function() return LabelHint("showGuild", "RP guild names", "Guild") end, opt)
         elseif opt.configKey == "flareui_rp_plate_titles" then
-            Hint(elements, i + 1, checks, function() return LabelHint("showTitles", "RP titles", "Show Titles") end, opt)
+            Hint(elements, i + 1, checks, function() return LabelHint("showTitles", "RP titles", "Title") end, opt)
         elseif opt.configKey == "flareui_rp_plate_guild_colours" then
             Hint(elements, i + 1, checks, GuildColourHint, opt)
         end

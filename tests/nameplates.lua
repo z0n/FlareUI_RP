@@ -133,6 +133,14 @@ plate.nameOnly = false
 plate.aboveName = { SetText = plate.name.SetText, SetFormattedText = plate.name.SetFormattedText,
     SetTextColor = plate.name.SetTextColor, IsShown = function() return true end }
 plate.aboveKind = "lastname"
+-- The same plate after targeting (above-name only), then clearing target
+-- (Name Only, Show Level off). Inactive labels must not be repainted.
+plate.nameSlot, plate.name.text = nil, "inactive"
+paint(plate); assert(plate.aboveName.text == "12 Moonfall" and plate.name.text == "inactive")
+plate.nameOnly, plate.nameSlot, plate.aboveKind, plate.levelFollow = true, "middle", nil, false
+plate.aboveName.text = "inactive"
+paint(plate); assert(plate.name.text == "Aster Moonfall" and plate.aboveName.text == "inactive")
+plate.nameOnly, plate.nameSlot, plate.aboveKind, plate.levelFollow = false, "left", "lastname", true
 paint(plate); assert(plate.aboveName.text == "12 Moonfall" and plate.name.text == "12 Aster Moonfall")
 plate.aboveKind = "firstname"
 paint(plate); assert(plate.aboveName.text == "12 Aster" and plate.name.text == "12 Aster Moonfall")

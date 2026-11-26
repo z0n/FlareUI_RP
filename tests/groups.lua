@@ -39,11 +39,11 @@ local function Tile(unit)
         Health = { SetStatusBarColor = function(self, r) self.red = r end }, db = { classColor = true } }
 end
 local party, raid, boss = Tile("party1"), Tile("raid1"), Tile("boss1")
-party.index, party.btFullName, FlareUI_Party1 = 1, false, party
+party.index, party.format, FlareUI_Party1 = 1, false, party
 raid.flareTile, raid.ctx = true, { fontKey = "raid" }
 boss.ctx = { fontKey = "boss" }
 local pf = { SlotOn = function(f) return f.index ~= nil end, NameAboveDb = function(f) return f.db end }
-function pf.SlotStyle(f) return f.style or "plain" end
+function pf.NameFull(f) return f.format end
 FlareUI = { PartyFrames = pf, NameAbove = { SetName = function(f) f.NameAboveText:SetText(units[f.fuiUnit]) end,
         Get = function() return "middle", "fullname" end }, UnitDisplayName = UnitNameUnmodified,
     EditPreviewing = function() return editing end, ClassColorsOn = function(db) return db.classColor end,
@@ -80,9 +80,12 @@ party.Name.text = "previous member"
 FlareUI.NameAbove.SetName(party)
 assert(lookups == beforePaint + 1 and party.Name.text == "previous member" and party.NameAboveText.text == "Aster Moonfall")
 assert(raid.Name.text == "B" and raid.Health.red == 0.5 and boss.Name.text == "A" and boss.Health.red == 0.5)
-party.style, party.btFullName = "partytile", true
+party.format = true -- Forever Style always requests the full name.
 FlareUI.db.profile.unitframes.fullNames = false
-draw(party); assert(party.Name.text == "Aster")
+draw(party); assert(party.Name.text == "Aster Moonfall")
+party.format = nil -- Raid Style without an explicit pick uses the global setting.
+party.Name.IsShown = function() return false end
+draw(party); assert(party.Name.text == "Aster" and not party.Name:IsShown())
 FlareUI.db.profile.unitframes.fullNames = true
 draw(party); assert(party.Name.text == "Aster Moonfall")
 units.party1 = secret
@@ -109,7 +112,6 @@ units.raid2 = "B"; raid.db.classColor = false
 draw(raid)
 assert(raid.Name.text == "Birch Winter" and raid.Health.red == 0.5)
 -- Released per-layout helper overrides the global full-name setting.
-function pf.NameFull(f) return f.format end
 FlareUI.NameAbove.Get = function(db) return "middle", db.above or "fullname" end
 party.format, raid.format, raid.db.above = "lastname", false, "lastname"
 records.A.last, records.B.last = "Moonfall", "Winter"

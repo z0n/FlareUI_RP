@@ -136,14 +136,14 @@ plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
 plates.friendlyPlayer.nameOnlyTarget = true
 plate.widget.OnShow()
-assert(plate.widget.Button.shown and plate.widget.Title.text:find("Friendly Player") and plate.widget.Title.text:find("Class & Reaction"))
+assert(plate.widget.Button.shown and plate.widget.Title.text:find("Friendly Player") and plate.widget.Title.text:find("Plate > Look > Colour By > Class & Reaction"))
 plates.friendlyPlayer.nameOnlyTarget = false
 plate.widget.OnShow()
 assert(not plate.widget.Button.shown)
 plates.minor = { plate = "name", healthColor = "class" }
 combatTypes.minor = true
 plate.widget.OnShow()
-assert(plate.widget.Title.text:find("Minor") and plate.widget.Title.text:find("Style > Bar Text > Colour Names by Class"))
+assert(plate.widget.Title.text:find("Minor") and plate.widget.Title.text:find("Plate > Text > Colour Names by Class"))
 plate.OnClick(); assert(opened[1] == "np" and opened[2] == "style")
 plates.minor.slots = { middle = { percent = 1 } }
 plate.widget.OnShow(); assert(not plate.widget.Button.shown, "a health-only layout has no name to colour")
@@ -160,7 +160,7 @@ assert(not labelHint.Title.shown and not colourHint.Title.shown)
 values[gl.configKey], values[gc.configKey] = true, true
 gl.OnClick(); gc.OnClick()
 hints[gl].OnClick()
-assert(opened[1] == "np" and opened[2] == "style" and hidden and body.text:find("Show Guild Name"))
+assert(opened[1] == "np" and opened[2] == "style" and hidden and body.text:find("Under the Name > Guild"))
 local taller = note.height + 40
 body.GetStringHeight = function() return taller end
 note:OnDragStop()
@@ -170,9 +170,9 @@ hints[gl].OnClick(); close:OnClick(); assert(not note.shown)
 local titleHint = hints[titles].widget
 assert(not titleHint.Title.shown)
 values[titles.configKey] = "short"; onTitleChange()
-assert(titleHint.Title.shown and titleHint.Title.text:find("Show Titles"))
+assert(titleHint.Title.shown and titleHint.Title.text:find("Under the Name > Title"))
 plates.friendlyPlayer.showTitles = true; titleHint.OnShow(); assert(not titleHint.Title.shown)
-assert(labelHint.Title.text:find("Show Guild Name") and colourHint.Title.text:find("Colour Guild Members"))
+assert(labelHint.Title.text:find("Under the Name > Guild") and colourHint.Title.text:find("Colour Guild Members"))
 plates.enemyPlayer.plate, plates.enemyPlayer.showGuild = "name", true
 labelHint.OnShow(); assert(not labelHint.Button.shown and colourHint.Button.shown)
 plates.friendlyPlayer.guildColor = true

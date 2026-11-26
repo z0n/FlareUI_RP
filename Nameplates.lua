@@ -353,7 +353,7 @@ function ns.StartNameplates(config, elements)
         elements[#elements + 1] = { inherit = "TRP3_ConfigDropDown", configKey = key, title = "RP Titles",
             widgetName = "FlareUI_RP_ConfigPlateTitles",
             listContent = { { "No RP titles", "none" }, { "Short title", "short" }, { "Full title", "full" } },
-            help = "Choose which profile title to show on Name Only plates with Show Titles enabled. Full title uses the short title if the full title is empty. Linked companions use their single title for either choice. If no matching title is available, FlareUI keeps its normal line." }
+            help = "Choose which profile title to show on Name Only plates. In FlareUI, select Under the Name > Title for the plate type. Full title uses the short title if the full title is empty. Linked companions use their single title for either choice. If no matching title is available, FlareUI keeps its normal line." }
         -- The host anchors the guild immediately after painting this title line.
         hooksecurefunc(np, "UpdateTitleLine", PaintTitle)
     end
@@ -363,7 +363,7 @@ function ns.StartNameplates(config, elements)
         guilds = config.getValue(guildKey)
         config.registerHandler(guildKey, function(_, on) guilds = on; Refresh(false) end)
         elements[#elements + 1] = { inherit = "TRP3_ConfigCheck", configKey = guildKey, title = "Use RP Guild Names",
-            help = "Show the profile's Guild name on Name Only player plates when Show Guild Name is enabled in FlareUI. Without an RP guild, keep the normal guild line." }
+            help = "Show the profile's guild on Name Only player plates. In FlareUI, select Under the Name > Guild for the plate type. Without an RP guild, keep the normal guild line." }
         hooksecurefunc(np, "UpdateGuild", PaintGuild)
     end
     if np.UpdateColor and np.BarColor then hooksecurefunc(np, "UpdateColor", PaintBar) end
