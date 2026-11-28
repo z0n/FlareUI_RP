@@ -1,3 +1,7 @@
+# FlareUI RP 0.8.1 — FlareUI 7.1 compatibility
+
+- Nameplate setup hints now use FlareUI 7.1’s settings paths. On Name Only plates, find **Title** and **Guild** under **Under the Name**. For full plates, find **Colour Names by Class** under **Plate > Text** and **Colour By** under **Plate > Look**.
+
 # FlareUI RP 0.8.0 — RP colours for linked pets and minions
 
 - **Use RP Colours** now covers players and linked companions alike, replacing **Use Companion Name Colours**. Companion names can use their profile colour on **Name Only** plates. On full plates, enable **Colour Names by Class** for names or choose **Class & Reaction** for health bars in FlareUI’s Plate Setup.

@@ -1,3 +1,4 @@
-# FlareUI RP 0.8.1 — FlareUI 7.1 compatibility
+# FlareUI RP 0.8.2 — Setup hints for FlareUI 7.1.3
 
-- Nameplate setup hints now use FlareUI 7.1’s settings paths. On Name Only plates, find **Title** and **Guild** under **Under the Name**. For full plates, find **Colour Names by Class** under **Plate > Text** and **Colour By** under **Plate > Look**.
+- Raid frame colour hints now follow the settings for your active raid size, including any overrides.
+- Nameplate colour hints now include Name Only plates that switch to full plates when the unit is fighting.
