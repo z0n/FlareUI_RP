@@ -24,6 +24,11 @@ local function FrameHint(unit)
     local label = labels[unit]
     if db.enabled == false then return label .. " frames are switched off in FlareUI.", "uf", "settings" end
     if unit == "party" then db = db[db.style == "raid" and "raid" or "classic"] end
+    if unit == "raid" then
+        -- The same effective settings that raid tiles read, including size overrides.
+        local ctx = FlareUI.RaidFrames and FlareUI.RaidFrames.PreviewCtx
+        db = ctx and ctx.TextDb and ctx.TextDb()
+    end
     if not db then return end
     local classOff = unit ~= "pet" and not FlareUI.ClassColorsOn(db)
     local gradient = FlareUI.UnitFrames.HealthColorMode(db) == "health"
@@ -113,11 +118,12 @@ end
 local function PlateHint()
     local np = ActiveNameplates()
     if not np then return end
-    local combat = np.CombatList(true) -- selected profile, even while live plates await combat end
+    -- Read both lists from the selected profile, even while live plates await combat end.
+    local combat, fighting = np.CombatList(true), np.FightList(true)
     local bars, names = {}, {}
     for _, kind in ipairs({ "friendlyPlayer", "enemyPlayer", "minor" }) do
         local db = np.TypeDB(kind)
-        if db and db.plate and db.plate ~= "hidden" and (db.plate ~= "name" or db.nameOnlyTarget or combat[kind]) then
+        if db and db.plate and db.plate ~= "hidden" and (db.plate ~= "name" or db.nameOnlyTarget or combat[kind] or fighting[kind]) then
             if db.healthColor and db.healthColor ~= "class" then bars[#bars + 1] = plateLabels[kind] end
             if not db.nameClassColor and HasFullPlateName(np, db) then names[#names + 1] = plateLabels[kind] end
         end

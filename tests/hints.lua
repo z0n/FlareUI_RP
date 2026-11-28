@@ -5,15 +5,19 @@ local target = { classColor = false, healthColor = "health" }
 local party = { style = "raid", raid = { classColor = true }, classic = { classColor = false } }
 local plates = { friendlyPlayer = { plate = "name", healthColor = "reaction" },
     enemyPlayer = { plate = "full", healthColor = "health", nameClassColor = true } }
-local combatTypes = {}
+local combatTypes, fightingTypes = {}, {}
+local raid = { classColor = true, healthColor = "health" }
+local activeRaid = setmetatable({ classColor = false, healthColor = "low" }, { __index = raid })
 local pet = { classColor = false }
-local profile = { unitframes = { units = { target = target, pet = pet }, party = party }, nameplates = {} }
+local profile = { unitframes = { units = { target = target, pet = pet }, party = party, raid = raid }, nameplates = {} }
 FlareUI_UF_Target, FlareUI_UF_Pet, FlareUI_Party = {}, {}, {}
 FlareUI = { db = { profile = profile }, ClassColorsOn = function(db) return db.classColor ~= false end,
     UnitFrames = { HealthColorMode = function(db) return db.healthColor end },
+    RaidFrames = { PreviewCtx = { TextDb = function() return activeRaid end } },
     BarText = { NameOf = function(fields) return fields.firstname end },
     Nameplates = { TypeDB = function(kind) return plates[kind] end,
         CombatList = function(preview) return preview and combatTypes or {} end,
+        FightList = function(preview) return preview and fightingTypes or {} end,
         TextSlots = function(db) return db.slots or { left = { firstname = 1 } } end,
         NameAbovePick = function(db) return db.nameAbove end },
     Settings = { CanEditFrames = function() return not combat end,
@@ -34,7 +38,8 @@ local onTitleChange
 TRP3_API.configuration.registerHandler = function(key, fn) assert(key == titles.configKey); onTitleChange = fn end
 values[titles.configKey], values[gl.configKey], values[gc.configKey] = "none", false, false
 local petOption = checkbox("pet_health")
-local elements = { t, g, n, gl, gc, titles, petOption }
+local raidOption = checkbox("raid_health")
+local elements = { t, g, n, gl, gc, titles, petOption, raidOption }
 assert(loadfile("SetupHints.lua"))("FlareUI_RP", ns)
 local watchHints = ns.AddSetupHints(elements)
 local function noop() end
@@ -126,6 +131,11 @@ assert(hints[g].widget.Button.shown and hints[g].widget.Button.text == "Edit Par
 values[g.configKey] = false
 g.OnClick()
 assert(not hints[g].widget.Title.shown)
+local raidHint = hints[raidOption].widget
+assert(raidHint.Title.shown and raidHint.Title.text:find("Class Colours") and not raidHint.Title.text:find("Tint Health"))
+activeRaid = setmetatable({}, { __index = raid })
+raidHint.OnShow()
+assert(raidHint.Title.shown and raidHint.Title.text:find("Tint Health") and not raidHint.Title.text:find("Class Colours"))
 local plate = hints[n]
 assert(plate.widget.Title.text:find("Enemy Player") and not plate.widget.Title.text:find("Friendly Player"))
 assert(not plate.widget.Title.text:find("warning") and plate.widget.Button.text == "Open Nameplate Settings")
@@ -154,6 +164,11 @@ plate.widget.OnShow(); assert(not plate.widget.Button.shown)
 plates.minor.healthColor = "reaction"
 plate.widget.OnShow(); assert(plate.widget.Button.shown and plate.widget.Title.text:find("Minor"))
 combatTypes.minor = nil
+plate.widget.OnShow(); assert(not plate.widget.Button.shown)
+fightingTypes.friendlyPlayer = true
+plate.widget.OnShow()
+assert(plate.widget.Button.shown and plate.widget.Title.text:find("Friendly Player") and not plate.widget.Title.text:find("Minor"))
+fightingTypes.friendlyPlayer = nil
 plate.widget.OnShow(); assert(not plate.widget.Button.shown)
 local labelHint, colourHint = hints[gl].widget, hints[gc].widget
 assert(not labelHint.Title.shown and not colourHint.Title.shown)
